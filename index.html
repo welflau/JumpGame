@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platformer Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #1a1a2e;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #game-container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      background: #0f3460;
+      border: 4px solid #16213e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* HUD Styles */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 15px 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #health-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .heart {
+      width: 32px;
+      height: 32px;
+      background: #ff4757;
+      position: relative;
+      transform: rotate(-45deg);
+      animation: heartbeat 1.5s ease-in-out infinite;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: '';
+      width: 32px;
+      height: 32px;
+      background: #ff4757;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    .heart::before {
+      top: -16px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: 16px;
+      top: 0;
+    }
+
+    .heart.empty {
+      background: #333;
+      opacity: 0.3;
+    }
+
+    .heart.empty::before,
+    .heart.empty::after {
+      background: #333;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: rotate(-45deg) scale(1); }
+      10% { transform: rotate(-45deg) scale(1.1); }
+      20% { transform: rotate(-45deg) scale(1); }
+    }
+
+    #coin-counter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 193, 7, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid #ffc107;
+    }
+
+    .coin-icon {
+      width: 28px;
+      height: 28px;
+      background: radial-gradient(circle at 30% 30%, #ffd700, #ffb300);
+      border-radius: 50%;
+      border: 2px solid #ff8f00;
+      position: relative;
+      animation: coin-spin 3s linear infinite;
+    }
+
+    .coin-icon::before {
+      content: '$';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ff8f00;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    @keyframes coin-spin {
+      0%, 100% { transform: rotateY(0deg); }
+      50% { transform: rotateY(180deg); }
+    }
+
+    #coin-count {
+      color: #ffc107;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      min-width: 40px;
+    }
+
+    /* Game Over / Victory Modal */
+    #game-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      padding: 40px 60px;
+      border-radius: 16px;
+      border: 4px solid #16213e;
+      text-align: center;
+      z-index: 100;
+      display: none;
+      pointer-events: auto;
+    }
+
+    #game-modal.show {
+      display: block;
+      animation: modal-appear 0.3s ease-out;
+    }
+
+    @keyframes modal-appear {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    #modal-title {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    #modal-title.victory {
+      color: #2ecc71;
+      text-shadow: 0 0 20px #2ecc71;
+    }
+
+    #modal-title.defeat {
+      color: #e74c3c;
+      text-shadow: 0 0 20px #e74c3c;
+    }
+
+    #modal-message {
+      color: #ecf0f1;
+      font-size: 20px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    #restart-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    #restart-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    #restart-button:active {
+      transform: translateY(0);
+    }
+
+    /* Visual Feedback Effects */
+    .damage-flash {
+      animation: damage-flash 0.5s ease-out;
+    }
+
+    @keyframes damage-flash {
+      0%, 100% { filter: brightness(1); }
+      25%, 75% { filter: brightness(2) drop-shadow(0 0 10px #ff4757); }
+      50% { filter: brightness(1); }
+    }
+
+    .collect-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #ffc107;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 50;
+      animation: particle-rise 0.8s ease-out forwards;
+    }
+
+    @keyframes particle-rise {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100px) scale(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+    
+    <!-- HUD -->
+    <div id="hud">
+      <div id="health-container">
+        <!-- Hearts will be generated by JS -->
+      </div>
+      <div id="coin-counter">
+        <div class="coin-icon"></div>
+        <span id="coin-count">0</span>
+      </div>
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="game-modal">
+      <h1 id="modal-title"></h1>
+      <p id="modal-message"></p>
+      <button id="restart-button">Restart Game</button>
+    </div>
+  </div>
+
+  <script>
+    // Game State
+    const gameState = {
+      maxHealth: 3,
+      currentHealth: 3,
+      coins: 0,
+      isGameOver: false,
+      isVictory: false
+    };
+
+    // DOM Elements
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const healthContainer = document.getElementById('health-container');
+    const coinCountEl = document.getElementById('coin-count');
+    const gameModal = document.getElementById('game-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const restartButton = document.getElementById('restart-button');
+
+    // Initialize HUD
+    function initHUD() {
+      updateHealthDisplay();
+      updateCoinDisplay();
+    }
+
+    // Update Health Display
+    function updateHealthDisplay() {
+      healthContainer.innerHTML = '';
+      for (let i = 0; i < gameState.maxHealth; i++) {
+        const heart = document.createElement('div');
+        heart.className = i < gameState.currentHealth ? 'heart' : 'heart empty';
+        healthContainer.appendChild(heart);
+      }
+    }
+
+    // Update Coin Display
+    function updateCoinDisplay() {
+      coinCountEl.textContent = gameState.coins;
+    }
+
+    // Take Damage
+    function takeDamage(amount = 1) {
+      if (gameState.isGameOver) return;
+      
+      gameState.currentHealth = Math.max(0, gameState.currentHealth - amount);
+      updateHealthDisplay();
+      
+      // Visual feedback - flash effect
+      canvas.classList.add('damage-flash');
+      setTimeout(() => canvas.classList.remove('damage-flash'), 500);
+      
+      // Check for game over
+      if (gameState.currentHealth <= 0) {
+        gameOver(false);
+      }
+    }
+
+    // Collect Coin
+    function collectCoin(x, y) {
+      if (gameState.isGameOver) return;
+      
+      gameState.coins++;
+      updateCoinDisplay();
+      
+      // Visual feedback - particle effect
+      createCollectParticles(x, y);
+      
+      // Check for victory condition (example: collect 10 coins)
+      if (gameState.coins >= 10) {
+        gameOver(true);
+      }
+    }
+
+    // Create Collect Particles
+    function createCollectParticles(x, y) {
+      const particleCount = 8;
+      const container = document.getElementById('game-container');
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'collect-particle';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        
+        // Random offset
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const distance = 30 + Math.random() * 20;
+        particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+        particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+        
+        container.appendChild(particle);
+        
+        setTimeout(() => particle.remove(), 800);
+      }
+    }
+
+    // Game Over
+    function gameOver(isVictory) {
+      gameState.isGameOver = true;
+      gameState.isVictory = isVictory;
+      
+      // Show modal
+      if (isVictory) {
+        modalTitle.textContent = 'Victory!';
+        modalTitle.className = 'victory';
+        modalMessage.textContent = `Congratulations! You collected ${gameState.coins} coins!`;
+      } else {
+        modalTitle.textContent = 'Game Over';
+        modalTitle.className = 'defeat';
+        modalMessage.textContent = `You collected ${gameState.coins} coins before falling.`;
+      }
+      
+      gameModal.classList.add('show');
+    }
+
+    // Restart Game
+    function restartGame() {
+      gameState.currentHealth = gameState.maxHealth;
+      gameState.coins = 0;
+      gameState.isGameOver = false;
+      gameState.isVictory = false;
+      
+      updateHealthDisplay();
+      updateCoinDisplay();
+      gameModal.classList.remove('show');
+      
+      // Reset game logic (placeholder)
+      initGame();
+    }
+
+    // Event Listeners
+    restartButton.addEventListener('click', restartGame);
+
+    // Simple Game Loop (Demo)
+    let player = { x: 100, y: 400, width: 40, height: 40, velocityY: 0, isJumping: false };
+    let coins = [
+      { x: 200, y: 350, width: 30, height: 30, collected: false },
+      { x: 350, y: 300, width: 30, height: 30, collected: false },
+      { x: 500, y: 250, width: 30, height: 30, collected: false },
+      { x: 650, y: 200, width: 30, height: 30, collected: false },
+      { x: 300, y: 450, width: 30, height: 30, collected: false },
+      { x: 450, y: 400, width: 30, height: 30, collected: false },
+      { x: 600, y: 350, width: 30, height: 30, collected: false },
+      { x: 150, y: 250, width: 30, height: 30, collected: false },
+      { x: 700, y: 300, width: 30, height: 30, collected: false },
+      { x: 400, y: 150, width: 30, height: 30, collected: false }
+    ];
+    let platforms = [
+      { x: 0, y: 550, width: 800, height: 50 },
+      { x: 150, y: 450, width: 150, height: 20 },
+      { x: 350, y: 400, width: 150, height: 20 },
+      { x: 550, y: 350, width: 150, height: 20 },
+      { x: 100, y: 300, width: 150, height: 20 },
+      { x: 600, y: 250, width: 150, height: 20 }
+    ];
+    let hazards = [
+      { x: 250, y: 530, width: 100, height: 20 },
+      { x: 500, y: 530, width: 100, height: 20 }
+    ];
+
+    const GRAVITY = 0.6;
+    const JUMP_STRENGTH = -12;
+    const MOVE_SPEED = 5;
+
+    const keys = {};
+
+    function initGame() {
+      player = { x: 100, y: 400, width: 40, height: 40, velocityY: 0, isJumping: false };
+      coins.forEach(coin => coin.collected = false);
+    }
+
+    function update() {
+      if (gameState.isGameOver) return;
+
+      // Player movement
+      if (keys['ArrowLeft'] || keys['a']) player.x -= MOVE_SPEED;
+      if (keys['ArrowRight'] || keys['d']) player.x += MOVE_SPEED;
+
+      // Gravity
+      player.velocityY += GRAVITY;
+      player.y += player.velocityY;
+
+      // Platform collision
+      player.isJumping = true;
+      platforms.forEach(platform => {
+        if (player.x < platform.x + platform.width &&
+            player.x + player.width > platform.x &&
+            player.y + player.height > platform.y &&
+            player.y + player.height < platform.y + platform.height &&
+            player.velocityY > 0) {
+          player.y = platform.y - player.height;
+          player.velocityY = 0;
+          player.isJumping = false;
+        }
+      });
+
+      // Jump
+      if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && !player.isJumping) {
+        player.velocityY = JUMP_STRENGTH;
+        player.isJumping = true;
+      }
+
+      // Boundary
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+      // Fall off screen
+      if (player.y > canvas.height) {
+        takeDamage(gameState.currentHealth); // Instant death
+      }
+
+      // Coin collection
+      coins.forEach(coin => {
+        if (!coin.collected &&
+            player.x < coin.x + coin.width &&
+            player.x + player.width > coin.x &&
+            player.y < coin.y + coin.height &&
+            player.y + player.height > coin.y) {
+          coin.collected = true;
+          collectCoin(coin.x + coin.width / 2, coin.y + coin.height / 2);
+        }
+      });
+
+      // Hazard collision
+      hazards.forEach(hazard => {
+        if (player.x < hazard.x + hazard.width &&
+            player.x + player.width > hazard.x &&
+            player.y < hazard.y + hazard.height &&
+            player.y + player.height > hazard.y) {
+          takeDamage(1);
+          player.y = 400; // Reset position
+          player.velocityY = 0;
+        }
+      });
+    }
+
+    function draw() {
+      // Clear canvas
+      ctx.fillStyle = '#0f3460';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw platforms
+      ctx.fillStyle = '#16213e';
+      platforms.forEach(platform => {
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+      });
+
+      // Draw hazards
+      ctx.fillStyle = '#e74c3c';
+      hazards.forEach(hazard => {
+        ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
+      });
+
+      // Draw coins
+      coins.forEach(coin => {
+        if (!coin.collected) {
+          ctx.fillStyle = '#ffc107';
+          ctx.beginPath();
+          ctx.arc(coin.x + coin.width / 2, coin.y + coin.height / 2, coin.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ff8f00';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      });
+
+      // Draw player
+      ctx.fillStyle = '#667eea';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Keyboard input
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    // Initialize and start
+    initHUD();
+    initGame();
+    gameLoop();
+  </script>
+</body>
+</html>
