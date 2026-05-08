@@ -1,10 +1,10 @@
 # 开发笔记 — 实现摄像机跟随系统
 
-> 2026-05-08 17:52 | LLM
+> 2026-05-08 17:53 | LLM
 
 ## 产出文件
-- [camera/Camera.js](/app#repo?file=camera/Camera.js) (8746 chars)
-- [index.html](/app#repo?file=index.html) (24269 chars)
+- [camera/Camera.js](/app#repo?file=camera/Camera.js) (9831 chars)
+- [index.html](/app#repo?file=index.html) (24291 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
@@ -19,19 +19,19 @@
 
 ## 代码变更 (Diff)
 
-### camera/Camera.js (新建, 8746 chars)
+### camera/Camera.js (新建, 9831 chars)
 ```
 + // ============================================
-+ // Camera System - Smooth Scrolling Camera
++ // Camera System - Smooth Following & Viewport Management
 + // ============================================
 + 
 + class Camera {
 +   constructor(canvasWidth, canvasHeight, worldWidth, worldHeight) {
 +     // Canvas dimensions (viewport size)
-+     this.width = canvasWidth;
-+     this.height = canvasHeight;
++     this.viewportWidth = canvasWidth;
++     this.viewportHeight = canvasHeight;
 +     
-+     // World dimensions (level bounds)
++     // World dimensions (level boundaries)
 +     this.worldWidth = worldWidth;
 +     this.worldHeight = worldHeight;
 +     
@@ -39,7 +39,7 @@
 +     this.x = 0;
 +     this.y = 0;
 +     
-+     // Target position for smooth following
++     // Target position (what the camera is following)
 +     this.targetX = 0;
 + ... (更多)
 ```
@@ -61,9 +61,9 @@
 
 +      CAMERA_SMOOTHNESS: 0.1,
 
-+      CAMERA_LOOKAHEAD: 100,
++      CAMERA_OFFSET_X: 300,
 
-+      CAMERA_DEADZONE: 150
++      CAMERA_LOOKAHEAD: 100
 
      };
 
@@ -71,7 +71,7 @@
 
      // ============================================
 
-@@ -264,6 +267,54 @@
+@@ -264,6 +267,35 @@
        reset() {
 
          this.currentFrame = 0;
@@ -100,47 +100,47 @@
 
 +        this.smoothness = CONFIG.CAMERA_SMOOTHNESS;
 
-+        this.lookahead = CONFIG.CAMERA_LOOKAHEAD;
-
-+        this.deadzone = CONFIG.CAMERA_DEADZONE;
-
 +      }
 
 +
 
 +      follow(player) {
 
-+        const playerCenterX = player.x + player.width / 2;
++        const lookahead = player.facingRight ? CONFIG.CAMERA_LOOKAHEAD : -CONFIG.CAMERA_LOOKAHEAD;
 
-+        const cameraCenterX = this.x + CONFIG.CANVAS_WIDTH / 2;
-
-+        
-
-+        // Calculate lookahead based on player direction
-
-+        const lookaheadOffset = player.facingRight ? this.lookahead : -this.lookahead;
++        this.targetX = player.x - CONFIG.CAMERA_OFFSET_X + lookahead;
 
 +        
 
-+        // Calculate target position with lookahead
++        this.targetX = Math.max(0, this.targetX);
 
-+        this.targetX = playerCenterX + lookaheadOffset - CONFIG.CANVAS_WIDTH / 2;
++        this.targetX = Math.min(gameState.levelWidth - CONFIG.CANVAS_WIDTH, this.targetX);
 
 +        
 
-+        // Apply deadzone
++        this.x += (this.targetX - this.x) * this.smoothness;
 
-+        const distanceFromCenter = playerCenterX - cameraCenterX;
++      }
 
-+        if (Math.abs(distanceFromCenter) > this.deadzone) {
++
 
-+          const sign = distanceFromCenter > 0 ? 1 : -1;
++      apply(ctx) {
 
-+          this.targetX = playerCenterX + lookaheadOffset - CONFIG.CANVAS_WIDTH / 2;
++        ctx.translate(-this.x, 0);
 
-+        } else {
++      }
 
-+          this.targetX = this.x;
++
 
-... (共 357 行变更)
++      reset(ctx) {
+
++        ctx.translate(this.x, 0);
+
+       }
+
+     }
+
+ 
+
+... (共 350 行变更)
 ```

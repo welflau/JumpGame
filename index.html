@@ -237,8 +237,8 @@
       COYOTE_TIME: 6,
       JUMP_BUFFER: 8,
       CAMERA_SMOOTHNESS: 0.1,
-      CAMERA_LOOKAHEAD: 100,
-      CAMERA_DEADZONE: 150
+      CAMERA_OFFSET_X: 300,
+      CAMERA_LOOKAHEAD: 100
     };
 
     // ============================================
@@ -278,43 +278,24 @@
         this.x = 0;
         this.targetX = 0;
         this.smoothness = CONFIG.CAMERA_SMOOTHNESS;
-        this.lookahead = CONFIG.CAMERA_LOOKAHEAD;
-        this.deadzone = CONFIG.CAMERA_DEADZONE;
       }
 
       follow(player) {
-        const playerCenterX = player.x + player.width / 2;
-        const cameraCenterX = this.x + CONFIG.CANVAS_WIDTH / 2;
+        const lookahead = player.facingRight ? CONFIG.CAMERA_LOOKAHEAD : -CONFIG.CAMERA_LOOKAHEAD;
+        this.targetX = player.x - CONFIG.CAMERA_OFFSET_X + lookahead;
         
-        // Calculate lookahead based on player direction
-        const lookaheadOffset = player.facingRight ? this.lookahead : -this.lookahead;
+        this.targetX = Math.max(0, this.targetX);
+        this.targetX = Math.min(gameState.levelWidth - CONFIG.CANVAS_WIDTH, this.targetX);
         
-        // Calculate target position with lookahead
-        this.targetX = playerCenterX + lookaheadOffset - CONFIG.CANVAS_WIDTH / 2;
-        
-        // Apply deadzone
-        const distanceFromCenter = playerCenterX - cameraCenterX;
-        if (Math.abs(distanceFromCenter) > this.deadzone) {
-          const sign = distanceFromCenter > 0 ? 1 : -1;
-          this.targetX = playerCenterX + lookaheadOffset - CONFIG.CANVAS_WIDTH / 2;
-        } else {
-          this.targetX = this.x;
-        }
-        
-        // Smooth camera movement
         this.x += (this.targetX - this.x) * this.smoothness;
-        
-        // Clamp camera to level boundaries
-        this.x = Math.max(0, Math.min(this.x, gameState.levelWidth - CONFIG.CANVAS_WIDTH));
       }
 
       apply(ctx) {
-        ctx.save();
         ctx.translate(-this.x, 0);
       }
 
       reset(ctx) {
-        ctx.restore();
+        ctx.translate(this.x, 0);
       }
     }
 
@@ -611,32 +592,21 @@
       }
 
       draw(ctx) {
-        if (this.invincible && Math.floor(gameState.frameCount / 5) % 2 === 0) {
-          return;
-        }
-
         ctx.save();
-        if (!this.facingRight) {
-          ctx.scale(-1, 1);
-          ctx.translate(-this.x - this.width, 0);
-        } else {
-          ctx.translate(this.x, 0);
+        
+        if (this.invincible && Math.floor(gameState.frameCount / 5) % 2 === 0) {
+          ctx.globalAlpha = 0.5;
         }
 
-        // Body
-        ctx.fillStyle = '#3498db';
-        ctx.fillRect(0, this.y + 10, this.width, this.height - 10);
-
-        // Head
-        ctx.fillStyle = '#f39c12';
-        ctx.beginPath();
-        ctx.arc(this.width / 2, this.y + 10, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Eyes
-        ctx.fillStyle = '#000';
-        ctx.fillRect(this.width / 2 - 6, this.y + 8, 3, 3);
-        ctx.fillRect(this.width / 2 + 3, this.y + 8, 3, 3);
+        if (!this.facingRight) {
+          ctx.translate(this.x + this.width, this.y);
+          ctx.scale(-1, 1);
+          ctx.fillStyle = '#3498db';
+          ctx.fillRect(0, 0, this.width, this.height);
+        } else {
+          ctx.fillStyle = '#3498db';
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
 
         ctx.restore();
       }
@@ -663,7 +633,7 @@
       update(dt) {
         if (!this.alive) return;
 
-        // Patrol logic
+        // Patrol behavior
         if (this.x <= this.patrolStart) {
           this.vx = CONFIG.ENEMY_SPEED;
         } else if (this.x >= this.patrolEnd) {
@@ -678,19 +648,17 @@
         CollisionDetector.checkPlatformCollisions(this, gameState.platforms);
 
         // Check collision with player
-        if (this.alive && CollisionDetector.AABB(this, gameState.player)) {
+        if (CollisionDetector.AABB(this, gameState.player)) {
           const playerBottom = gameState.player.y + gameState.player.height;
           const enemyTop = this.y;
-
-          if (gameState.player.vy > 0 && playerBottom < enemyTop + 10) {
-            // Player jumped on enemy
+          
+          if (gameState.player.vy > 0 && playerBottom - enemyTop < 15) {
             this.alive = false;
             gameState.player.vy = CONFIG.PLAYER_JUMP * 0.5;
             gameState.score += CONFIG.ENEMY_KILL_SCORE;
             updateHUD();
             this.createDeathParticles();
           } else {
-            // Enemy hit player
             gameState.player.takeDamage(1);
           }
         }
@@ -705,7 +673,7 @@
             y: this.y + this.height / 2,
             vx: (Math.random() - 0.5) * 5,
             vy: (Math.random() - 0.5) * 5,
-            life: 40,
+            life: 25,
             color: '#e74c3c'
           });
         }
@@ -713,18 +681,12 @@
 
       draw(ctx) {
         if (!this.alive) return;
-
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(this.x, this.y, this.width, this.height);
-
-        // Eyes
+        
         ctx.fillStyle = '#fff';
-        ctx.fillRect(this.x + 8, this.y + 10, 6, 6);
-        ctx.fillRect(this.x + 18, this.y + 10, 6, 6);
-
-        ctx.fillStyle = '#000';
-        ctx.fillRect(this.x + 10, this.y + 12, 3, 3);
-        ctx.fillRect(this.x + 20, this.y + 12, 3, 3);
+        ctx.fillRect(this.x + 8, this.y + 8, 6, 6);
+        ctx.fillRect(this.x + 18, this.y + 8, 6, 6);
       }
     }
 
@@ -739,14 +701,15 @@
         this.height = 20;
         this.collected = false;
         this.animation = new SpriteAnimation([0, 1, 2, 3], 8);
-        this.floatOffset = 0;
+        this.bobOffset = 0;
+        this.bobSpeed = 0.1;
       }
 
       update() {
         if (this.collected) return;
 
-        this.floatOffset = Math.sin(gameState.frameCount * 0.05) * 5;
-
+        this.bobOffset += this.bobSpeed;
+        
         if (CollisionDetector.AABB(this, gameState.player)) {
           this.collected = true;
           gameState.score += CONFIG.COIN_VALUE;
@@ -764,30 +727,26 @@
             y: this.y + this.height / 2,
             vx: (Math.random() - 0.5) * 4,
             vy: (Math.random() - 0.5) * 4,
-            life: 25,
-            color: '#f1c40f'
+            life: 20,
+            color: '#f39c12'
           });
         }
       }
 
       draw(ctx) {
         if (this.collected) return;
-
-        ctx.save();
-        ctx.translate(this.x + this.width / 2, this.y + this.height / 2 + this.floatOffset);
-        ctx.rotate(gameState.frameCount * 0.02);
-
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-
+        
+        const drawY = this.y + Math.sin(this.bobOffset) * 5;
+        
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.arc(0, 0, this.width / 3, 0, Math.PI * 2);
+        ctx.arc(this.x + this.width / 2, drawY + this.height / 2, this.width / 2, 0, Math.PI * 2);
         ctx.fill();
-
-        ctx.restore();
+        
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(this.x + this.width / 2, drawY + this.height / 2, this.width / 3, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -799,30 +758,33 @@
         this.x = x;
         this.y = y;
         this.width = 40;
-        this.height = 100;
+        this.height = 60;
         this.reached = false;
+        this.waveOffset = 0;
       }
 
       update() {
-        if (this.reached) return;
-
-        if (CollisionDetector.AABB(this, gameState.player)) {
+        this.waveOffset += 0.1;
+        
+        if (!this.reached && CollisionDetector.AABB(this, gameState.player)) {
           this.reached = true;
           levelComplete();
         }
       }
 
       draw(ctx) {
-        // Pole
         ctx.fillStyle = '#555';
-        ctx.fillRect(this.x + 5, this.y, 5, this.height);
-
-        // Flag
-        ctx.fillStyle = this.reached ? '#2ecc71' : '#e74c3c';
+        ctx.fillRect(this.x, this.y, 4, this.height);
+        
+        ctx.fillStyle = '#2ecc71';
         ctx.beginPath();
-        ctx.moveTo(this.x + 10, this.y + 10);
-        ctx.lineTo(this.x + 40, this.y + 25);
-        ctx.lineTo(this.x + 10, this.y + 40);
+        ctx.moveTo(this.x + 4, this.y);
+        for (let i = 0; i <= 10; i++) {
+          const waveX = this.x + 4 + (this.width - 4) * (i / 10);
+          const waveY = this.y + (this.height * 0.6) * (i / 10) + Math.sin(this.waveOffset + i * 0.5) * 3;
+          ctx.lineTo(waveX, waveY);
+        }
+        ctx.lineTo(this.x + 4, this.y + this.height * 0.6);
         ctx.closePath();
         ctx.fill();
       }
@@ -845,22 +807,21 @@
         
         switch(this.type) {
           case 'grass':
-            gradient.addColorStop(0, '#2ecc71');
-            gradient.addColorStop(1, '#27ae60');
+            gradient.addColorStop(0, '#27ae60');
+            gradient.addColorStop(1, '#229954');
             break;
           case 'stone':
-            gradient.addColorStop(0, '#95a5a6');
-            gradient.addColorStop(1, '#7f8c8d');
+            gradient.addColorStop(0, '#7f8c8d');
+            gradient.addColorStop(1, '#5d6d7e');
             break;
           default:
             gradient.addColorStop(0, '#34495e');
             gradient.addColorStop(1, '#2c3e50');
         }
-
+        
         ctx.fillStyle = gradient;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-
-        // Border
+        
         ctx.strokeStyle = 'rgba(0,0,0,0.3)';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
@@ -875,7 +836,39 @@
         const particle = gameState.particleSystem[i];
         particle.x += particle.vx;
         particle.y += particle.vy;
-        particle.vy += 0.2;
         particle.life--;
+        
+        if (particle.life <= 0) {
+          gameState.particleSystem.splice(i, 1);
+        }
+      }
+    }
 
-        if (particle.life <= 0
+    function drawParticles(ctx) {
+      for (const particle of gameState.particleSystem) {
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = particle.life / 30;
+        ctx.fillRect(particle.x - 2, particle.y - 2, 4, 4);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // ============================================
+    // Level Generation
+    // ============================================
+    function generateLevel(levelNumber) {
+      gameState.platforms = [];
+      gameState.enemies = [];
+      gameState.coins = [];
+      gameState.particleSystem = [];
+
+      const levelConfigs = {
+        1: {
+          platforms: [
+            new Platform(0, 550, 800, 50, 'grass'),
+            new Platform(200, 450, 200, 20, 'grass'),
+            new Platform(500, 350, 200, 20, 'grass'),
+            new Platform(800, 450, 200, 20, 'stone'),
+            new Platform(1100, 350, 200, 20, 'stone'),
+            new Platform(1400, 450, 300, 20, 'grass'),
+            new Platform(1
