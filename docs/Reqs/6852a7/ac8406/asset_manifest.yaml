@@ -1,69 +1,11 @@
 # asset_manifest.yaml — 开发玩家角色系统和精灵动画
-# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
-# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+# 由 UX Agent 自动生成初稿，美术 Agent 会补全和确认
 assets:
-  - id: player_idle
-    type: sprite_sheet
-    description: 玩家待机动画精灵表，32x32px 单帧，4 帧横向排列，总尺寸 128x32px
-    source_hint: user_provided_or_commission
-    status: pending
-  - id: player_walk
-    type: sprite_sheet
-    description: 玩家行走动画精灵表，32x32px 单帧，8 帧横向排列，总尺寸 256x32px
-    source_hint: user_provided_or_commission
-    status: pending
-  - id: player_jump
-    type: sprite_sheet
-    description: 玩家跳跃动画精灵表，32x32px 单帧，4 帧横向排列（起跳/上升/下落/落地），总尺寸 128x32px
-    source_hint: user_provided_or_commission
-    status: pending
-  - id: player_hurt
-    type: sprite
-    description: 玩家受伤单帧，32x32px，后仰姿势
-    source_hint: user_provided_or_commission
-    status: pending
-  - id: heart_full
+  - id: asset_001
     type: icon
-    description: 满血心形图标，16x16px 像素风格，绿色填充
-    source_hint: design_or_kenney
-    status: pending
-  - id: heart_empty
-    type: icon
-    description: 空血心形图标，16x16px 像素风格，灰色轮廓
-    source_hint: design_or_kenney
-    status: pending
-  - id: heart_damaged
-    type: icon
-    description: 损血心形图标，16x16px 像素风格，红色填充
-    source_hint: design_or_kenney
-    status: pending
-  - id: dust_particle
-    type: particle
-    description: 尘埃粒子，4x4px 白色/灰色方块，用于跳跃和落地效果
-    source_hint: procedural_generate
-    status: pending
-  - id: sfx_jump
-    type: audio
-    description: 跳跃音效，轻快的 8-bit 风格，0.2s
-    source_hint: freesound_or_kenney
-    status: pending
-  - id: sfx_land
-    type: audio
-    description: 落地音效，低沉的撞击声，0.15s
-    source_hint: freesound_or_kenney
-    status: pending
-  - id: sfx_hurt
-    type: audio
-    description: 受伤音效，短促的痛苦声，0.3s
-    source_hint: freesound_or_kenney
-    status: pending
-  - id: sfx_walk
-    type: audio
-    description: 脚步音效（可选），柔和的踏步声，0.1s，循环播放
-    source_hint: freesound_or_kenney
-    status: pending
-  - id: pixel_font
-    type: font
-    description: 像素风格字体用于 HUD 文本，支持英文和数字
-    source_hint: google_fonts_press_start_2p
-    status: pending
+    description: icon: 待补充
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_002
+    type: illustration
+    description: illustration: 空状态图（400x300）
+    status: pending  # 待美术Agent确认来源和规格
