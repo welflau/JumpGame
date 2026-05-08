@@ -8,239 +8,249 @@
 ```mermaid
 stateDiagram-v2
     [*] --> StartScreen: 页面加载
-    StartScreen --> Initializing: 点击 Start Game
-    Initializing --> GameScene: 初始化成功
-    Initializing --> ErrorState: 初始化失败
-    ErrorState --> StartScreen: 点击重试
-    
-    note right of StartScreen
-        显示游戏标题
-        显示 Start Game 按钮
-        按钮状态：normal
-    end note
+    StartScreen --> Initializing: DOMContentLoaded触发
+    Initializing --> Ready: 事件监听器绑定成功
+    Ready --> ButtonHover: 鼠标悬停按钮
+    ButtonHover --> Ready: 鼠标移出
+    Ready --> ButtonPressed: 点击Start Game
+    ButtonPressed --> GameLoading: 触发游戏初始化
+    GameLoading --> GameScene: 游戏场景加载完成
     
     note right of Initializing
-        按钮状态：loading
-        显示加载提示
-        禁止重复点击
+        关键修复点：
+        1. 确保DOM完全加载
+        2. querySelector找到#start-btn
+        3. addEventListener成功绑定
     end note
     
-    note right of GameScene
-        进入游戏主场景
-        隐藏开始界面
-    end note
-    
-    note right of ErrorState
-        显示错误提示弹窗
-        提供重试按钮
+    note right of ButtonPressed
+        防御性检查：
+        - 按钮存在性验证
+        - 防止重复点击
+        - Console日志确认
     end note
 ```
 ```
 
 ## 组件线框说明
 
-## 开始界面（Start Screen）
+## 开始界面结构
 
-### 主要区域
-1. **标题区域**（顶部居中）
-   - 游戏标题文字：Platform Adventure
-   - 位置：垂直居中偏上（40% 位置）
+### 主容器 (#start-screen)
+- 全屏居中布局
+- 垂直方向 flexbox
 
-2. **交互区域**（中央）
-   - Start Game 按钮
-   - 位置：垂直居中偏下（60% 位置）
-   - 尺寸：宽度 200-240px，高度 48-56px
-
-3. **背景层**
-   - 全屏背景色/渐变
-   - 可选装饰性图形元素
-
-### 组件结构
+### 组件层级
 ```
-<开始界面容器>
-  ├─ <标题文字>
-  ├─ <按钮容器>
-  │   └─ <Start Game 按钮>
-  │       ├─ 按钮文字
-  │       └─ 加载状态指示器（隐藏）
-  └─ <错误提示弹窗>（隐藏）
-      ├─ 错误图标
-      ├─ 错误信息文字
-      └─ 重试按钮
+#start-screen
+├── .title-container
+│   └── h1 "Platform Adventure"
+│       - 游戏标题
+│       - 居中对齐
+│
+└── .button-container
+    └── button#start-btn
+        - 文本："Start Game"
+        - 主操作按钮
+        - 居中对齐
 ```
 
-### 元素 ID/Class
-- 按钮：`#start-btn`
-- 标题：`.game-title`
-- 错误弹窗：`.error-modal`（默认 display: none）
-- 加载指示器：`.loading-spinner`（默认 display: none）
+### 关键 DOM 元素
+- **#start-btn**（修复目标）
+  - 必须在 DOMContentLoaded 后可查询
+  - 需要绑定 click 事件监听器
+  - 点击后触发游戏初始化函数
+
+### 调试辅助元素（开发阶段）
+- Console 日志输出点：
+  1. DOMContentLoaded 触发确认
+  2. querySelector 查询结果
+  3. 事件监听器绑定确认
+  4. 按钮点击事件触发确认
 
 ## 交互状态定义
 
 ## Start Game 按钮状态
 
-### 1. 默认状态（normal）
-- 可点击
-- 显示文字「Start Game」
-- 光标：pointer
+### 1. 默认（normal）
+- 可点击状态
+- cursor: pointer
 - 视觉：实心背景 + 白色文字
 
-### 2. 悬停状态（hover）- Web 端
-- 背景亮度提升 10%
-- 轻微放大效果（scale: 1.05）
-- 过渡动画：0.2s ease
+### 2. 悬停（hover）
+- Web 端鼠标悬停时
+- 视觉变化：背景亮度提升 10%
+- transition: 0.2s ease
 
-### 3. 按下状态（active）
-- 缩小效果（scale: 0.95）
-- 背景亮度降低 5%
-- 过渡动画：0.1s ease
+### 3. 按下（active）
+- 鼠标按下或触摸时
+- transform: scale(0.95)
+- 视觉：背景亮度降低 10%
+- transition: 0.1s ease
 
-### 4. 加载状态（loading）
-- 文字变为「Loading...」或隐藏
-- 显示旋转的加载图标（spinner）
-- 禁止点击（pointer-events: none）
-- 透明度：0.8
-- 持续时间：直到游戏初始化完成
+### 4. 禁用（disabled）
+- 游戏加载中时自动禁用
+- opacity: 0.5
+- cursor: not-allowed
+- pointer-events: none
+- 防止重复点击
 
-### 5. 禁用状态（disabled）
-- 透明度：0.5
-- 光标：not-allowed
-- 不响应任何交互事件
-- 使用场景：游戏资源加载中、初始化失败时
+### 5. 加载中（loading）
+- 点击后立即进入此状态
+- 文本变为 "Loading..."
+- 可选：添加旋转 spinner 图标
+- 禁用点击事件
 
-### 6. 错误状态（error）
-- 按钮恢复为默认状态
-- 触发错误弹窗显示
-- 按钮文字保持「Start Game」
+### 6. 错误（error）
+- 游戏初始化失败时
+- 按钮文本变为 "Retry"
+- 背景色变为警告色
+- 1.5s 后恢复为默认状态
 
-## 错误提示弹窗状态
+## 页面级状态
 
-### 1. 隐藏状态（默认）
-- display: none
-- 不占据布局空间
+### 初始化中（Initializing）
+- DOMContentLoaded 触发后
+- 事件监听器绑定过程
+- Console 输出："Initializing game..."
 
-### 2. 显示状态（error）
-- 从下向上滑入 + fade in（200ms）
-- 半透明遮罩层（rgba(0,0,0,0.5)）
-- 弹窗居中显示
-- 包含：错误图标 + 错误信息 + 重试按钮
+### 就绪（Ready）
+- 所有事件监听器绑定完成
+- 按钮可交互
+- Console 输出："Game ready, click Start to begin"
 
-### 3. 关闭动画
-- fade out（150ms）
-- 返回隐藏状态
+### 游戏加载中（Game Loading）
+- 点击按钮后
+- 开始界面可选淡出动画（fade-out 0.3s）
+- 按钮进入 loading 状态
 
-## 重试按钮状态
-- 继承 Start Game 按钮的所有交互状态
-- 点击后：关闭弹窗 → 重新触发游戏初始化流程
+### 错误状态（Error）
+- 游戏初始化失败
+- 显示错误提示（Toast 或内联文本）
+- 按钮变为 Retry 状态
+- 提供重试机制
 
 ## 响应式/适配规则
 
-## 断点定义
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: > 1024px
+## 响应式断点
 
-## 响应式布局规则
+### Mobile（< 768px）
+- 开始界面全屏垂直居中
+- 标题字号：相对单位（建议 2.5rem）
+- 按钮宽度：80% 容器宽度，最大 300px
+- 按钮高度：48px（符合触摸目标最小尺寸）
+- 垂直间距：标题与按钮间距 40px
 
-### Mobile (< 768px)
-- 标题文字：较小尺寸（相对单位）
-- Start Game 按钮：
-  - 宽度：80% 容器宽度（最大 280px）
-  - 高度：48px
-  - 触摸区域：最小 44x44px（符合移动端可点击区域标准）
-- 错误弹窗：
-  - 宽度：90% 容器宽度
-  - 距离屏幕边缘：5% margin
-- 取消 hover 效果（移动端无鼠标悬停）
-- 保留 active 状态（触摸反馈）
+### Tablet（768px - 1024px）
+- 标题字号：3rem
+- 按钮宽度：60% 容器宽度，最大 400px
+- 按钮高度：56px
+- 垂直间距：标题与按钮间距 60px
 
-### Tablet (768px - 1024px)
-- 标题文字：中等尺寸
-- Start Game 按钮：
-  - 宽度：固定 240px
-  - 高度：52px
-- 错误弹窗：
-  - 宽度：60% 容器宽度（最大 500px）
-- 支持 hover 效果
+### Desktop（> 1024px）
+- 标题字号：4rem
+- 按钮宽度：固定 400px
+- 按钮高度：64px
+- 垂直间距：标题与按钮间距 80px
+- hover 效果启用（移动端禁用 hover）
 
-### Desktop (> 1024px)
-- 标题文字：最大尺寸
-- Start Game 按钮：
-  - 宽度：固定 240px
-  - 高度：56px
-- 错误弹窗：
-  - 宽度：固定 480px
-  - 居中显示
-- 完整 hover + active 交互
+## 交互适配
 
-## 通用规则
-- 所有文字使用相对单位（rem/em）
-- 按钮圆角：固定 8px（不随尺寸缩放）
-- 间距使用百分比或 viewport 单位（vh/vw）
-- 最小触摸区域：44x44px（移动端）
-- 最小点击区域：32x32px（桌面端）
+### 触摸设备
+- 按钮最小触摸区域：44x44px（iOS 规范）
+- 禁用 hover 伪类（通过 @media (hover: hover) 判断）
+- active 状态反馈更明显（scale 0.92）
+
+### 键盘导航
+- 按钮支持 Tab 键聚焦
+- 聚焦时显示 outline（2px 主色）
+- Enter/Space 键触发点击
+
+## 性能优化
+- 使用 transform 而非 width/height 做动画（GPU 加速）
+- 事件监听器使用 passive: true（滚动性能）
+- 避免在 hover/active 时触发 reflow
 
 ## UI 资产清单（初稿）
 
 ## 图标（Icons）
 
-### 1. 加载图标（Loading Spinner）
-- **用途**：按钮加载状态指示器
-- **尺寸**：24x24px
-- **风格**：圆形旋转动画，线条风格（stroke-width: 2-3px）
-- **颜色**：白色（叠加在按钮上）
-- **动画**：360° 旋转，1s 线性循环
-- **格式**：SVG 或 CSS 动画
-
-### 2. 错误图标（Error Icon）
-- **用途**：错误弹窗顶部提示
-- **尺寸**：48x48px
-- **风格**：圆形感叹号或 X 图标，填充风格
-- **颜色**：错误红色（语义化）
-- **格式**：SVG
-
-### 3. 重试图标（Retry Icon）- 可选
-- **用途**：重试按钮左侧装饰
+### 1. Loading Spinner
+- **用途**：按钮 loading 状态指示器
 - **尺寸**：20x20px
-- **风格**：循环箭头，outline 风格
-- **颜色**：继承按钮文字颜色
+- **风格**：简约圆环旋转动画
+- **格式**：SVG 或 CSS 动画
+- **颜色**：白色（叠加在按钮背景上）
+
+### 2. Retry Icon（可选）
+- **用途**：错误状态下的重试按钮图标
+- **尺寸**：24x24px
+- **风格**：圆形箭头（顺时针）
 - **格式**：SVG
+- **颜色**：继承按钮文字颜色
 
 ## 插画（Illustrations）
 
-### 无需插画
-- 本界面为游戏开始界面，以简洁为主
-- 背景可使用纯色/渐变/简单几何图形
+### 1. Error State Illustration（可选）
+- **用途**：游戏初始化失败时显示
+- **描述**：简约的错误提示图（如断开的插头/感叹号）
+- **尺寸**：200x200px
+- **风格**：扁平化，与游戏主题一致
+- **位置**：按钮上方或替换标题区域
 
-## 图片（Images）
+## 背景资源（Backgrounds）
 
-### 背景图（可选）
-- **用途**：开始界面全屏背景
-- **尺寸**：1920x1080px（16:9 比例）
-- **格式**：WebP（优先）或 JPG
-- **内容**：游戏主题相关的抽象背景或场景预览
-- **优化**：压缩至 < 200KB
+### 1. Start Screen Background
+- **用途**：开始界面背景
+- **尺寸**：响应式（cover 模式）
+- **建议**：渐变色或低饱和度游戏场景截图
+- **格式**：WebP（备用 JPG）
+- **优化**：< 200KB
 
-## 动效资产
+## 调试资源（开发阶段）
 
-### 按钮点击波纹效果（可选）
-- **实现方式**：CSS 伪元素 + transform
-- **持续时间**：0.6s
-- **扩散范围**：从点击点向外扩散至按钮边缘
+### 1. Console 日志图标（可选）
+- **用途**：开发模式下在页面显示初始化状态
+- **类型**：文本标签或小型状态指示器
+- **位置**：页面右下角
+- **内容**：
+  - ✅ DOM Loaded
+  - ✅ Event Bound
+  - ✅ Ready to Start
 
-### 弹窗遮罩层
-- **实现方式**：CSS background-color + opacity
-- **颜色**：rgba(0, 0, 0, 0.5)
-- **动画**：fade in 200ms
-
-## 字体资产
+## 字体资源
 
 ### 游戏标题字体
-- **建议**：粗体、具有游戏感的无衬线字体
-- **备选方案**：系统字体栈（-apple-system, BlinkMacSystemFont, 'Segoe UI'）
-- **字重**：700-900（Bold/Black）
+- **要求**：支持英文，具有游戏感
+- **备选方案**：系统字体栈（'Press Start 2P', monospace, sans-serif）
+- **加载策略**：font-display: swap（避免 FOIT）
 
-### 按钮文字字体
-- **建议**：中等字重无衬线字体
-- **字重**：500-600（Medium/Semibold）
-- **大小写**：全大写或首字母大写（根据游戏风格）
+## 音效资源（可选）
+
+### 1. Button Click Sound
+- **用途**：按钮点击反馈
+- **格式**：MP3/OGG
+- **时长**：< 0.5s
+- **音量**：可配置（默认 50%）
+
+### 2. Error Sound
+- **用途**：初始化失败提示
+- **格式**：MP3/OGG
+- **时长**：< 1s
+
+---
+
+## 资源加载优先级
+
+**关键路径（必须同步加载）**：
+- #start-btn DOM 元素
+- 事件监听器脚本
+
+**次要资源（可延迟加载）**：
+- 背景图片
+- 自定义字体
+- 音效文件
+
+**开发调试资源（生产环境移除）**：
+- Console 日志
+- 状态指示器
