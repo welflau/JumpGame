@@ -3,9 +3,285 @@
 assets:
   - id: asset_001
     type: icon
-    description: icon: 待补充
+    description: ## 图标（Icons）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_002
-    type: illustration
-    description: illustration: 空状态图（400x300）
+    type: icon
+    description: ### 1. 加载图标（Loading Spinner）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_003
+    type: icon
+    description: 用途**：按钮加载状态指示器
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_004
+    type: icon
+    description: 尺寸**：24x24px
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_005
+    type: icon
+    description: 风格**：circular spinner，游戏主题色或白色
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_006
+    type: icon
+    description: 动画**：360° 旋转，1s 循环
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_007
+    type: icon
+    description: 格式**：SVG 或 CSS 动画
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_008
+    type: icon
+    description: ### 2. 错误图标（Error Icon）- 可选
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_009
+    type: icon
+    description: 用途**：错误提示前的视觉标识
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_010
+    type: icon
+    description: 尺寸**：16x16px
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_011
+    type: icon
+    description: 风格**：感叹号或 X 符号，红色
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_012
+    type: icon
+    description: 格式**：SVG
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_013
+    type: icon
+    description: ### 3. 重试图标（Retry Icon）- 可选
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_014
+    type: icon
+    description: 用途**：错误状态下的重试按钮
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_015
+    type: icon
+    description: 尺寸**：20x20px
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_016
+    type: icon
+    description: 风格**：循环箭头，游戏主题色
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_017
+    type: icon
+    description: 格式**：SVG
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_018
+    type: icon
+    description: ## 插画（Illustrations）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_019
+    type: icon
+    description: ### 1. 游戏 Logo/标题艺术字
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_020
+    type: icon
+    description: 用途**："Platform Adventure" 标题展示
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_021
+    type: icon
+    description: 尺寸**：建议 600x200px（可缩放）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_022
+    type: icon
+    description: 风格**：像素风/卡通风，与游戏主题一致
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_023
+    type: icon
+    description: 格式**：PNG（透明背景）或 SVG
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_024
+    type: icon
+    description: ### 2. 背景装饰元素（可选）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_025
+    type: icon
+    description: 用途**：开始界面背景氛围营造
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_026
+    type: icon
+    description: 内容**：游戏角色剪影、平台元素、云朵等
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_027
+    type: icon
+    description: 尺寸**：适配不同屏幕（建议 1920x1080 基准）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_028
+    type: icon
+    description: 格式**：PNG 或 WebP
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_029
+    type: icon
+    description: ## 图片（Images）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_030
+    type: icon
+    description: ### 1. 背景图（Background Image）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_031
+    type: icon
+    description: 用途**：开始界面全屏背景
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_032
+    type: icon
+    description: 尺寸**：1920x1080px（16:9 比例）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_033
+    type: icon
+    description: 内容**：游戏场景预览或抽象纹理
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_034
+    type: icon
+    description: 格式**：WebP（优先）或 JPG
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_035
+    type: icon
+    description: 优化**：移动端提供 1280x720 版本
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_036
+    type: icon
+    description: ### 2. 按钮背景纹理（可选）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_037
+    type: icon
+    description: 用途**：按钮的纹理叠加层
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_038
+    type: icon
+    description: 尺寸**：可平铺的小图（如 64x64px）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_039
+    type: icon
+    description: 格式**：PNG（透明）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_040
+    type: icon
+    description: ## 字体（Fonts）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_041
+    type: icon
+    description: ### 1. 标题字体
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_042
+    type: icon
+    description: 用途**："Platform Adventure" 标题
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_043
+    type: icon
+    description: 风格**：粗体、游戏感强（如像素字体或卡通字体）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_044
+    type: icon
+    description: 格式**：WOFF2
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_045
+    type: icon
+    description: 备选**：系统字体 fallback（Arial Black, Impact）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_046
+    type: icon
+    description: ### 2. 按钮字体
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_047
+    type: icon
+    description: 用途**："Start Game" 按钮文本
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_048
+    type: icon
+    description: 风格**：清晰易读，中等粗细
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_049
+    type: icon
+    description: 格式**：WOFF2
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_050
+    type: icon
+    description: 备选**：系统字体（Arial, Helvetica）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_051
+    type: icon
+    description: ## 音效（Audio）- 可选
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_052
+    type: icon
+    description: ### 1. 按钮点击音效
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_053
+    type: icon
+    description: 用途**：点击 Start Game 时播放
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_054
+    type: icon
+    description: 时长**：< 0.5s
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_055
+    type: icon
+    description: 格式**：MP3 或 OGG
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_056
+    type: icon
+    description: ### 2. 背景音乐（可选）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_057
+    type: icon
+    description: 用途**：开始界面循环播放
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_058
+    type: icon
+    description: 时长**：30-60s 循环
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_059
+    type: icon
+    description: 格式**：MP3
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_060
+    type: icon
+    description: 音量**：默认静音或低音量，用户可控制
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_061
+    type: icon
+    description: ## 资产优先级
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_062
+    type: icon
+    description: P0（必需）**：
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_063
+    type: icon
+    description: Loading Spinner 图标
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_064
+    type: icon
+    description: 背景图（可用纯色替代）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_065
+    type: icon
+    description: P1（重要）**：
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_066
+    type: icon
+    description: 游戏标题艺术字
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_067
+    type: icon
+    description: 错误图标
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_068
+    type: icon
+    description: P2（可选）**：
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_069
+    type: icon
+    description: 背景装饰元素
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_070
+    type: icon
+    description: 按钮纹理
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_071
+    type: icon
+    description: 音效
     status: pending  # 待美术Agent确认来源和规格
