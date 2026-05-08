@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Platformer Game</title>
+  <title>Tower Defense Game</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,251 +11,189 @@
       padding: 0;
     }
 
+    :root {
+      --primary-color: #1a1a2e;
+      --secondary-color: #16213e;
+      --accent-color: #0f3460;
+      --highlight-color: #e94560;
+      --text-color: #f1f1f1;
+    }
+
     body {
       font-family: 'Arial', sans-serif;
-      background: #1a1a2e;
-      overflow: hidden;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      color: var(--text-color);
     }
 
     #game-container {
       position: relative;
-      width: 800px;
-      height: 600px;
-      background: #0f3460;
-      border: 4px solid #16213e;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
       border-radius: 8px;
       overflow: hidden;
     }
 
-    canvas {
+    #game-canvas {
       display: block;
-      width: 100%;
-      height: 100%;
+      background: #2a2a3e;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
     }
 
-    /* HUD Styles */
-    #hud {
+    #game-ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      pointer-events: none;
+    }
+
+    .ui-panel {
+      background: rgba(26, 26, 46, 0.85);
+      padding: 10px 15px;
+      border-radius: 6px;
+      backdrop-filter: blur(5px);
+      margin-bottom: 10px;
+      pointer-events: auto;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-label {
+      color: #888;
+    }
+
+    .stat-value {
+      color: var(--highlight-color);
+      font-size: 16px;
+    }
+
+    #game-state-overlay {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      padding: 15px 20px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    #health-container {
-      display: flex;
-      gap: 8px;
-    }
-
-    .heart {
-      width: 32px;
-      height: 32px;
-      background: #ff4757;
-      position: relative;
-      transform: rotate(-45deg);
-      animation: heartbeat 1.5s ease-in-out infinite;
-    }
-
-    .heart::before,
-    .heart::after {
-      content: '';
-      width: 32px;
-      height: 32px;
-      background: #ff4757;
-      border-radius: 50%;
-      position: absolute;
-    }
-
-    .heart::before {
-      top: -16px;
-      left: 0;
-    }
-
-    .heart::after {
-      left: 16px;
-      top: 0;
-    }
-
-    .heart.empty {
-      background: #333;
-      opacity: 0.3;
-    }
-
-    .heart.empty::before,
-    .heart.empty::after {
-      background: #333;
-    }
-
-    @keyframes heartbeat {
-      0%, 100% { transform: rotate(-45deg) scale(1); }
-      10% { transform: rotate(-45deg) scale(1.1); }
-      20% { transform: rotate(-45deg) scale(1); }
-    }
-
-    #coin-counter {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 193, 7, 0.2);
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 2px solid #ffc107;
-    }
-
-    .coin-icon {
-      width: 28px;
-      height: 28px;
-      background: radial-gradient(circle at 30% 30%, #ffd700, #ffb300);
-      border-radius: 50%;
-      border: 2px solid #ff8f00;
-      position: relative;
-      animation: coin-spin 3s linear infinite;
-    }
-
-    .coin-icon::before {
-      content: '$';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #ff8f00;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    @keyframes coin-spin {
-      0%, 100% { transform: rotateY(0deg); }
-      50% { transform: rotateY(180deg); }
-    }
-
-    #coin-count {
-      color: #ffc107;
-      font-size: 24px;
-      font-weight: bold;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-      min-width: 40px;
-    }
-
-    /* Game Over / Victory Modal */
-    #game-modal {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.95);
-      padding: 40px 60px;
-      border-radius: 16px;
-      border: 4px solid #16213e;
-      text-align: center;
-      z-index: 100;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
       display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #game-state-overlay.active {
+      display: flex;
+    }
+
+    .state-message {
+      font-size: 48px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+    }
+
+    .state-message.victory {
+      color: #4ecca3;
+    }
+
+    .state-message.defeat {
+      color: var(--highlight-color);
+    }
+
+    .state-button {
+      padding: 12px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      background: var(--highlight-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
       pointer-events: auto;
     }
 
-    #game-modal.show {
-      display: block;
-      animation: modal-appear 0.3s ease-out;
-    }
-
-    @keyframes modal-appear {
-      from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
-      }
-      to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-      }
-    }
-
-    #modal-title {
-      font-size: 48px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-    }
-
-    #modal-title.victory {
-      color: #2ecc71;
-      text-shadow: 0 0 20px #2ecc71;
-    }
-
-    #modal-title.defeat {
-      color: #e74c3c;
-      text-shadow: 0 0 20px #e74c3c;
-    }
-
-    #modal-message {
-      color: #ecf0f1;
-      font-size: 20px;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-
-    #restart-button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 15px 40px;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-
-    #restart-button:hover {
+    .state-button:hover {
+      background: #ff6b81;
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
     }
 
-    #restart-button:active {
-      transform: translateY(0);
-    }
-
-    /* Visual Feedback Effects */
-    .damage-flash {
-      animation: damage-flash 0.5s ease-out;
-    }
-
-    @keyframes damage-flash {
-      0%, 100% { filter: brightness(1); }
-      25%, 75% { filter: brightness(2) drop-shadow(0 0 10px #ff4757); }
-      50% { filter: brightness(1); }
-    }
-
-    .collect-particle {
+    #loading-screen {
       position: absolute;
-      width: 8px;
-      height: 8px;
-      background: #ffc107;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 50;
-      animation: particle-rise 0.8s ease-out forwards;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--primary-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    @keyframes particle-rise {
-      0% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--highlight-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 18px;
+      color: #888;
+    }
+
+    .loading-progress {
+      width: 200px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .loading-bar {
+      height: 100%;
+      background: var(--highlight-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      #game-canvas {
+        max-width: 100vw;
+        height: auto;
       }
-      100% {
-        opacity: 0;
-        transform: translateY(-100px) scale(0);
+
+      .game-stats {
+        font-size: 12px;
+      }
+
+      .state-message {
+        font-size: 32px;
       }
     }
   </style>
@@ -264,316 +202,763 @@
   <div id="game-container">
     <canvas id="game-canvas" width="800" height="600"></canvas>
     
-    <!-- HUD -->
-    <div id="hud">
-      <div id="health-container">
-        <!-- Hearts will be generated by JS -->
-      </div>
-      <div id="coin-counter">
-        <div class="coin-icon"></div>
-        <span id="coin-count">0</span>
+    <div id="game-ui">
+      <div class="ui-panel game-stats">
+        <div class="stat-item">
+          <span class="stat-label">Health:</span>
+          <span class="stat-value" id="stat-health">100</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Gold:</span>
+          <span class="stat-value" id="stat-gold">500</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Wave:</span>
+          <span class="stat-value" id="stat-wave">1</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">FPS:</span>
+          <span class="stat-value" id="stat-fps">60</span>
+        </div>
       </div>
     </div>
 
-    <!-- Game Over / Victory Modal -->
-    <div id="game-modal">
-      <h1 id="modal-title"></h1>
-      <p id="modal-message"></p>
-      <button id="restart-button">Restart Game</button>
+    <div id="game-state-overlay">
+      <div class="state-message" id="state-message">Game Over</div>
+      <button class="state-button" id="restart-button">Restart Game</button>
+    </div>
+
+    <div id="loading-screen">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading Assets...</div>
+      <div class="loading-progress">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
     </div>
   </div>
 
-  <script>
-    // Game State
-    const gameState = {
-      maxHealth: 3,
-      currentHealth: 3,
-      coins: 0,
-      isGameOver: false,
-      isVictory: false
+  <script type="module">
+    // ============================================================================
+    // Core/AssetLoader - Resource loading and management
+    // ============================================================================
+    class AssetLoader {
+      constructor() {
+        this.assets = new Map();
+        this.loadQueue = [];
+        this.loadedCount = 0;
+        this.totalCount = 0;
+        this.onProgressCallback = null;
+      }
+
+      /**
+       * Add asset to load queue
+       * @param {string} key - Unique identifier for asset
+       * @param {string} url - Asset URL
+       * @param {string} type - Asset type: 'image' | 'audio' | 'json'
+       */
+      addAsset(key, url, type = 'image') {
+        this.loadQueue.push({ key, url, type });
+        this.totalCount++;
+      }
+
+      /**
+       * Load all queued assets
+       * @returns {Promise<void>}
+       */
+      async loadAll() {
+        const promises = this.loadQueue.map(asset => this._loadAsset(asset));
+        await Promise.all(promises);
+        this.loadQueue = [];
+      }
+
+      /**
+       * Load single asset
+       * @private
+       */
+      async _loadAsset({ key, url, type }) {
+        try {
+          let asset;
+          
+          switch (type) {
+            case 'image':
+              asset = await this._loadImage(url);
+              break;
+            case 'audio':
+              asset = await this._loadAudio(url);
+              break;
+            case 'json':
+              asset = await this._loadJSON(url);
+              break;
+            default:
+              throw new Error(`Unknown asset type: ${type}`);
+          }
+
+          this.assets.set(key, asset);
+          this.loadedCount++;
+          
+          if (this.onProgressCallback) {
+            this.onProgressCallback(this.loadedCount / this.totalCount);
+          }
+        } catch (error) {
+          console.error(`Failed to load asset: ${key} from ${url}`, error);
+          throw error;
+        }
+      }
+
+      _loadImage(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = url;
+        });
+      }
+
+      _loadAudio(url) {
+        return new Promise((resolve, reject) => {
+          const audio = new Audio();
+          audio.oncanplaythrough = () => resolve(audio);
+          audio.onerror = reject;
+          audio.src = url;
+        });
+      }
+
+      async _loadJSON(url) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+      }
+
+      /**
+       * Get loaded asset by key
+       * @param {string} key
+       * @returns {any}
+       */
+      getAsset(key) {
+        return this.assets.get(key);
+      }
+
+      /**
+       * Check if asset exists
+       * @param {string} key
+       * @returns {boolean}
+       */
+      hasAsset(key) {
+        return this.assets.has(key);
+      }
+
+      /**
+       * Set progress callback
+       * @param {Function} callback - (progress: number) => void
+       */
+      onProgress(callback) {
+        this.onProgressCallback = callback;
+      }
+
+      /**
+       * Get loading progress (0-1)
+       * @returns {number}
+       */
+      getProgress() {
+        return this.totalCount === 0 ? 1 : this.loadedCount / this.totalCount;
+      }
+    }
+
+    // ============================================================================
+    // Core/Renderer - Canvas rendering pipeline
+    // ============================================================================
+    class Camera {
+      constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+        this.zoom = 1;
+      }
+
+      /**
+       * Convert world coordinates to screen coordinates
+       */
+      worldToScreen(worldX, worldY) {
+        return {
+          x: (worldX - this.x) * this.zoom,
+          y: (worldY - this.y) * this.zoom
+        };
+      }
+
+      /**
+       * Convert screen coordinates to world coordinates
+       */
+      screenToWorld(screenX, screenY) {
+        return {
+          x: screenX / this.zoom + this.x,
+          y: screenY / this.zoom + this.y
+        };
+      }
+    }
+
+    class Renderer {
+      constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.camera = new Camera();
+        this.width = 0;
+        this.height = 0;
+      }
+
+      /**
+       * Initialize renderer with canvas element
+       * @param {string} canvasId - Canvas element ID
+       * @returns {boolean} Success status
+       */
+      initialize(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) {
+          console.error(`Canvas element not found: ${canvasId}`);
+          return false;
+        }
+
+        this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+          console.error('Failed to get 2D context');
+          return false;
+        }
+
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+
+        // Set default rendering properties
+        this.ctx.imageSmoothingEnabled = false;
+        
+        return true;
+      }
+
+      /**
+       * Clear entire canvas
+       */
+      clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+      }
+
+      /**
+       * Fill canvas with color
+       * @param {string} color
+       */
+      fillBackground(color) {
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+      }
+
+      /**
+       * Draw sprite/image
+       * @param {HTMLImageElement} image
+       * @param {number} x - World X coordinate
+       * @param {number} y - World Y coordinate
+       * @param {number} width
+       * @param {number} height
+       * @param {number} [sourceX] - Source sprite X
+       * @param {number} [sourceY] - Source sprite Y
+       * @param {number} [sourceWidth] - Source sprite width
+       * @param {number} [sourceHeight] - Source sprite height
+       */
+      drawSprite(image, x, y, width, height, sourceX, sourceY, sourceWidth, sourceHeight) {
+        const screenPos = this.camera.worldToScreen(x, y);
+        const scaledWidth = width * this.camera.zoom;
+        const scaledHeight = height * this.camera.zoom;
+
+        if (sourceX !== undefined && sourceY !== undefined && sourceWidth !== undefined && sourceHeight !== undefined) {
+          this.ctx.drawImage(
+            image,
+            sourceX, sourceY, sourceWidth, sourceHeight,
+            screenPos.x, screenPos.y, scaledWidth, scaledHeight
+          );
+        } else {
+          this.ctx.drawImage(image, screenPos.x, screenPos.y, scaledWidth, scaledHeight);
+        }
+      }
+
+      /**
+       * Draw text
+       * @param {string} text
+       * @param {number} x
+       * @param {number} y
+       * @param {Object} style - {font, color, align, baseline}
+       */
+      drawText(text, x, y, style = {}) {
+        const {
+          font = '16px Arial',
+          color = '#ffffff',
+          align = 'left',
+          baseline = 'top'
+        } = style;
+
+        this.ctx.font = font;
+        this.ctx.fillStyle = color;
+        this.ctx.textAlign = align;
+        this.ctx.textBaseline = baseline;
+        this.ctx.fillText(text, x, y);
+      }
+
+      /**
+       * Draw rectangle
+       * @param {number} x
+       * @param {number} y
+       * @param {number} width
+       * @param {number} height
+       * @param {string} color
+       * @param {boolean} filled
+       */
+      drawRect(x, y, width, height, color, filled = true) {
+        const screenPos = this.camera.worldToScreen(x, y);
+        const scaledWidth = width * this.camera.zoom;
+        const scaledHeight = height * this.camera.zoom;
+
+        if (filled) {
+          this.ctx.fillStyle = color;
+          this.ctx.fillRect(screenPos.x, screenPos.y, scaledWidth, scaledHeight);
+        } else {
+          this.ctx.strokeStyle = color;
+          this.ctx.strokeRect(screenPos.x, screenPos.y, scaledWidth, scaledHeight);
+        }
+      }
+
+      /**
+       * Draw circle
+       * @param {number} x
+       * @param {number} y
+       * @param {number} radius
+       * @param {string} color
+       * @param {boolean} filled
+       */
+      drawCircle(x, y, radius, color, filled = true) {
+        const screenPos = this.camera.worldToScreen(x, y);
+        const scaledRadius = radius * this.camera.zoom;
+
+        this.ctx.beginPath();
+        this.ctx.arc(screenPos.x, screenPos.y, scaledRadius, 0, Math.PI * 2);
+        
+        if (filled) {
+          this.ctx.fillStyle = color;
+          this.ctx.fill();
+        } else {
+          this.ctx.strokeStyle = color;
+          this.ctx.stroke();
+        }
+      }
+
+      /**
+       * Get canvas context
+       * @returns {CanvasRenderingContext2D}
+       */
+      getContext() {
+        return this.ctx;
+      }
+
+      /**
+       * Get camera instance
+       * @returns {Camera}
+       */
+      getCamera() {
+        return this.camera;
+      }
+    }
+
+    // ============================================================================
+    // Core/StateManager - Game state management
+    // ============================================================================
+    const GameState = {
+      LOADING: 'loading',
+      PLAYING: 'playing',
+      PAUSED: 'paused',
+      VICTORY: 'victory',
+      DEFEAT: 'defeat'
     };
 
-    // DOM Elements
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
-    const healthContainer = document.getElementById('health-container');
-    const coinCountEl = document.getElementById('coin-count');
-    const gameModal = document.getElementById('game-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalMessage = document.getElementById('modal-message');
-    const restartButton = document.getElementById('restart-button');
-
-    // Initialize HUD
-    function initHUD() {
-      updateHealthDisplay();
-      updateCoinDisplay();
-    }
-
-    // Update Health Display
-    function updateHealthDisplay() {
-      healthContainer.innerHTML = '';
-      for (let i = 0; i < gameState.maxHealth; i++) {
-        const heart = document.createElement('div');
-        heart.className = i < gameState.currentHealth ? 'heart' : 'heart empty';
-        healthContainer.appendChild(heart);
+    class StateManager {
+      constructor() {
+        this.currentState = GameState.LOADING;
+        this.previousState = null;
+        this.stateChangeCallbacks = new Map();
       }
-    }
 
-    // Update Coin Display
-    function updateCoinDisplay() {
-      coinCountEl.textContent = gameState.coins;
-    }
+      /**
+       * Change game state
+       * @param {string} newState
+       */
+      setState(newState) {
+        if (this.currentState === newState) return;
 
-    // Take Damage
-    function takeDamage(amount = 1) {
-      if (gameState.isGameOver) return;
-      
-      gameState.currentHealth = Math.max(0, gameState.currentHealth - amount);
-      updateHealthDisplay();
-      
-      // Visual feedback - flash effect
-      canvas.classList.add('damage-flash');
-      setTimeout(() => canvas.classList.remove('damage-flash'), 500);
-      
-      // Check for game over
-      if (gameState.currentHealth <= 0) {
-        gameOver(false);
-      }
-    }
+        this.previousState = this.currentState;
+        this.currentState = newState;
 
-    // Collect Coin
-    function collectCoin(x, y) {
-      if (gameState.isGameOver) return;
-      
-      gameState.coins++;
-      updateCoinDisplay();
-      
-      // Visual feedback - particle effect
-      createCollectParticles(x, y);
-      
-      // Check for victory condition (example: collect 10 coins)
-      if (gameState.coins >= 10) {
-        gameOver(true);
-      }
-    }
+        console.log(`State changed: ${this.previousState} -> ${this.currentState}`);
 
-    // Create Collect Particles
-    function createCollectParticles(x, y) {
-      const particleCount = 8;
-      const container = document.getElementById('game-container');
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'collect-particle';
-        particle.style.left = x + 'px';
-        particle.style.top = y + 'px';
-        
-        // Random offset
-        const angle = (Math.PI * 2 * i) / particleCount;
-        const distance = 30 + Math.random() * 20;
-        particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
-        particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
-        
-        container.appendChild(particle);
-        
-        setTimeout(() => particle.remove(), 800);
-      }
-    }
-
-    // Game Over
-    function gameOver(isVictory) {
-      gameState.isGameOver = true;
-      gameState.isVictory = isVictory;
-      
-      // Show modal
-      if (isVictory) {
-        modalTitle.textContent = 'Victory!';
-        modalTitle.className = 'victory';
-        modalMessage.textContent = `Congratulations! You collected ${gameState.coins} coins!`;
-      } else {
-        modalTitle.textContent = 'Game Over';
-        modalTitle.className = 'defeat';
-        modalMessage.textContent = `You collected ${gameState.coins} coins before falling.`;
-      }
-      
-      gameModal.classList.add('show');
-    }
-
-    // Restart Game
-    function restartGame() {
-      gameState.currentHealth = gameState.maxHealth;
-      gameState.coins = 0;
-      gameState.isGameOver = false;
-      gameState.isVictory = false;
-      
-      updateHealthDisplay();
-      updateCoinDisplay();
-      gameModal.classList.remove('show');
-      
-      // Reset game logic (placeholder)
-      initGame();
-    }
-
-    // Event Listeners
-    restartButton.addEventListener('click', restartGame);
-
-    // Simple Game Loop (Demo)
-    let player = { x: 100, y: 400, width: 40, height: 40, velocityY: 0, isJumping: false };
-    let coins = [
-      { x: 200, y: 350, width: 30, height: 30, collected: false },
-      { x: 350, y: 300, width: 30, height: 30, collected: false },
-      { x: 500, y: 250, width: 30, height: 30, collected: false },
-      { x: 650, y: 200, width: 30, height: 30, collected: false },
-      { x: 300, y: 450, width: 30, height: 30, collected: false },
-      { x: 450, y: 400, width: 30, height: 30, collected: false },
-      { x: 600, y: 350, width: 30, height: 30, collected: false },
-      { x: 150, y: 250, width: 30, height: 30, collected: false },
-      { x: 700, y: 300, width: 30, height: 30, collected: false },
-      { x: 400, y: 150, width: 30, height: 30, collected: false }
-    ];
-    let platforms = [
-      { x: 0, y: 550, width: 800, height: 50 },
-      { x: 150, y: 450, width: 150, height: 20 },
-      { x: 350, y: 400, width: 150, height: 20 },
-      { x: 550, y: 350, width: 150, height: 20 },
-      { x: 100, y: 300, width: 150, height: 20 },
-      { x: 600, y: 250, width: 150, height: 20 }
-    ];
-    let hazards = [
-      { x: 250, y: 530, width: 100, height: 20 },
-      { x: 500, y: 530, width: 100, height: 20 }
-    ];
-
-    const GRAVITY = 0.6;
-    const JUMP_STRENGTH = -12;
-    const MOVE_SPEED = 5;
-
-    const keys = {};
-
-    function initGame() {
-      player = { x: 100, y: 400, width: 40, height: 40, velocityY: 0, isJumping: false };
-      coins.forEach(coin => coin.collected = false);
-    }
-
-    function update() {
-      if (gameState.isGameOver) return;
-
-      // Player movement
-      if (keys['ArrowLeft'] || keys['a']) player.x -= MOVE_SPEED;
-      if (keys['ArrowRight'] || keys['d']) player.x += MOVE_SPEED;
-
-      // Gravity
-      player.velocityY += GRAVITY;
-      player.y += player.velocityY;
-
-      // Platform collision
-      player.isJumping = true;
-      platforms.forEach(platform => {
-        if (player.x < platform.x + platform.width &&
-            player.x + player.width > platform.x &&
-            player.y + player.height > platform.y &&
-            player.y + player.height < platform.y + platform.height &&
-            player.velocityY > 0) {
-          player.y = platform.y - player.height;
-          player.velocityY = 0;
-          player.isJumping = false;
+        // Trigger callbacks for this state
+        const callbacks = this.stateChangeCallbacks.get(newState);
+        if (callbacks) {
+          callbacks.forEach(callback => callback(this.previousState));
         }
-      });
-
-      // Jump
-      if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && !player.isJumping) {
-        player.velocityY = JUMP_STRENGTH;
-        player.isJumping = true;
       }
 
-      // Boundary
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-
-      // Fall off screen
-      if (player.y > canvas.height) {
-        takeDamage(gameState.currentHealth); // Instant death
+      /**
+       * Get current state
+       * @returns {string}
+       */
+      getState() {
+        return this.currentState;
       }
 
-      // Coin collection
-      coins.forEach(coin => {
-        if (!coin.collected &&
-            player.x < coin.x + coin.width &&
-            player.x + player.width > coin.x &&
-            player.y < coin.y + coin.height &&
-            player.y + player.height > coin.y) {
-          coin.collected = true;
-          collectCoin(coin.x + coin.width / 2, coin.y + coin.height / 2);
-        }
-      });
+      /**
+       * Check if in specific state
+       * @param {string} state
+       * @returns {boolean}
+       */
+      isState(state) {
+        return this.currentState === state;
+      }
 
-      // Hazard collision
-      hazards.forEach(hazard => {
-        if (player.x < hazard.x + hazard.width &&
-            player.x + player.width > hazard.x &&
-            player.y < hazard.y + hazard.height &&
-            player.y + player.height > hazard.y) {
-          takeDamage(1);
-          player.y = 400; // Reset position
-          player.velocityY = 0;
+      /**
+       * Register callback for state change
+       * @param {string} state
+       * @param {Function} callback
+       */
+      onStateChange(state, callback) {
+        if (!this.stateChangeCallbacks.has(state)) {
+          this.stateChangeCallbacks.set(state, []);
         }
-      });
+        this.stateChangeCallbacks.get(state).push(callback);
+      }
+
+      /**
+       * Check if game is running
+       * @returns {boolean}
+       */
+      isPlaying() {
+        return this.currentState === GameState.PLAYING;
+      }
+
+      /**
+       * Check if game is over
+       * @returns {boolean}
+       */
+      isGameOver() {
+        return this.currentState === GameState.VICTORY || this.currentState === GameState.DEFEAT;
+      }
     }
 
-    function draw() {
-      // Clear canvas
-      ctx.fillStyle = '#0f3460';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // ============================================================================
+    // Core/GameEngine - Main game loop and orchestration
+    // ============================================================================
+    class GameEngine {
+      constructor() {
+        this.renderer = new Renderer();
+        this.assetLoader = new AssetLoader();
+        this.stateManager = new StateManager();
+        
+        this.isRunning = false;
+        this.lastFrameTime = 0;
+        this.deltaTime = 0;
+        this.fps = 60;
+        this.frameCount = 0;
+        this.fpsUpdateTime = 0;
+        
+        this.updateCallbacks = [];
+        this.renderCallbacks = [];
+      }
 
-      // Draw platforms
-      ctx.fillStyle = '#16213e';
-      platforms.forEach(platform => {
-        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-      });
+      /**
+       * Initialize game engine
+       * @param {string} canvasId
+       * @returns {Promise<boolean>}
+       */
+      async initialize(canvasId) {
+        console.log('Initializing game engine...');
 
-      // Draw hazards
-      ctx.fillStyle = '#e74c3c';
-      hazards.forEach(hazard => {
-        ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
-      });
+        // Initialize renderer
+        if (!this.renderer.initialize(canvasId)) {
+          console.error('Failed to initialize renderer');
+          return false;
+        }
 
-      // Draw coins
-      coins.forEach(coin => {
-        if (!coin.collected) {
-          ctx.fillStyle = '#ffc107';
+        // Setup state change handlers
+        this._setupStateHandlers();
+
+        // Load placeholder assets (for demo)
+        this._loadDemoAssets();
+
+        // Load all assets
+        try {
+          await this.assetLoader.loadAll();
+          console.log('All assets loaded successfully');
+        } catch (error) {
+          console.error('Failed to load assets:', error);
+          return false;
+        }
+
+        return true;
+      }
+
+      /**
+       * Load demo assets for testing
+       * @private
+       */
+      _loadDemoAssets() {
+        // In real implementation, add actual asset URLs
+        // For now, just simulate loading time
+        this.assetLoader.onProgress((progress) => {
+          const loadingBar = document.getElementById('loading-bar');
+          if (loadingBar) {
+            loadingBar.style.width = `${progress * 100}%`;
+          }
+        });
+      }
+
+      /**
+       * Setup state change handlers
+       * @private
+       */
+      _setupStateHandlers() {
+        this.stateManager.onStateChange(GameState.PLAYING, () => {
+          document.getElementById('loading-screen').style.display = 'none';
+          document.getElementById('game-state-overlay').classList.remove('active');
+        });
+
+        this.stateManager.onStateChange(GameState.VICTORY, () => {
+          const overlay = document.getElementById('game-state-overlay');
+          const message = document.getElementById('state-message');
+          overlay.classList.add('active');
+          message.textContent = 'Victory!';
+          message.className = 'state-message victory';
+        });
+
+        this.stateManager.onStateChange(GameState.DEFEAT, () => {
+          const overlay = document.getElementById('game-state-overlay');
+          const message = document.getElementById('state-message');
+          overlay.classList.add('active');
+          message.textContent = 'Defeat!';
+          message.className = 'state-message defeat';
+        });
+      }
+
+      /**
+       * Start game loop
+       */
+      start() {
+        if (this.isRunning) return;
+        
+        console.log('Starting game loop...');
+        this.isRunning = true;
+        this.lastFrameTime = performance.now();
+        this.stateManager.setState(GameState.PLAYING);
+        this._gameLoop(this.lastFrameTime);
+      }
+
+      /**
+       * Stop game loop
+       */
+      stop() {
+        console.log('Stopping game loop...');
+        this.isRunning = false;
+      }
+
+      /**
+       * Main game loop
+       * @private
+       */
+      _gameLoop(currentTime) {
+        if (!this.isRunning) return;
+
+        // Calculate delta time (in seconds)
+        this.deltaTime = (currentTime - this.lastFrameTime) / 1000;
+        this.lastFrameTime = currentTime;
+
+        // Update FPS counter
+        this._updateFPS(currentTime);
+
+        // Update game logic
+        if (this.stateManager.isPlaying()) {
+          this.update(this.deltaTime);
+        }
+
+        // Render frame
+        this.render();
+
+        // Request next frame
+        requestAnimationFrame((time) => this._gameLoop(time));
+      }
+
+      /**
+       * Update FPS counter
+       * @private
+       */
+      _updateFPS(currentTime) {
+        this.frameCount++;
+        
+        if (currentTime - this.fpsUpdateTime >= 1000) {
+          this.fps = this.frameCount;
+          this.frameCount = 0;
+          this.fpsUpdateTime = currentTime;
+          
+          // Update UI
+          const fpsElement = document.getElementById('stat-fps');
+          if (fpsElement) {
+            fpsElement.textContent = this.fps;
+          }
+        }
+      }
+
+      /**
+       * Update all game systems
+       * @param {number} deltaTime
+       */
+      update(deltaTime) {
+        this.updateCallbacks.forEach(callback => callback(deltaTime));
+      }
+
+      /**
+       * Render current frame
+       */
+      render() {
+        // Clear canvas
+        this.renderer.clear();
+        this.renderer.fillBackground('#2a2a3e');
+
+        // Render all registered callbacks
+        this.renderCallbacks.forEach(callback => callback(this.renderer));
+
+        // Demo: Draw grid
+        this._renderDebugGrid();
+      }
+
+      /**
+       * Render debug grid
+       * @private
+       */
+      _renderDebugGrid() {
+        const ctx = this.renderer.getContext();
+        const gridSize = 50;
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+
+        // Vertical lines
+        for (let x = 0; x < this.renderer.width; x += gridSize) {
           ctx.beginPath();
-          ctx.arc(coin.x + coin.width / 2, coin.y + coin.height / 2, coin.width / 2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#ff8f00';
-          ctx.lineWidth = 2;
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, this.renderer.height);
           ctx.stroke();
         }
+
+        // Horizontal lines
+        for (let y = 0; y < this.renderer.height; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(this.renderer.width, y);
+          ctx.stroke();
+        }
+
+        // Center text
+        this.renderer.drawText(
+          'Tower Defense - Framework Ready',
+          this.renderer.width / 2,
+          this.renderer.height / 2,
+          {
+            font: 'bold 24px Arial',
+            color: '#ffffff',
+            align: 'center',
+            baseline: 'middle'
+          }
+        );
+      }
+
+      /**
+       * Register update callback
+       * @param {Function} callback - (deltaTime: number) => void
+       */
+      onUpdate(callback) {
+        this.updateCallbacks.push(callback);
+      }
+
+      /**
+       * Register render callback
+       * @param {Function} callback - (renderer: Renderer) => void
+       */
+      onRender(callback) {
+        this.renderCallbacks.push(callback);
+      }
+
+      /**
+       * Get renderer instance
+       * @returns {Renderer}
+       */
+      getRenderer() {
+        return this.renderer;
+      }
+
+      /**
+       * Get asset loader instance
+       * @returns {AssetLoader}
+       */
+      getAssetLoader() {
+        return this.assetLoader;
+      }
+
+      /**
+       * Get state manager instance
+       * @returns {StateManager}
+       */
+      getStateManager() {
+        return this.stateManager;
+      }
+    }
+
+    // ============================================================================
+    // Main Entry Point
+    // ============================================================================
+    (async function main() {
+      console.log('Tower Defense Game - Initializing...');
+
+      // Create game engine instance
+      const gameEngine = new GameEngine();
+      window.gameEngine = gameEngine; // Expose for debugging
+
+      // Initialize engine
+      const initialized = await gameEngine.initialize('game-canvas');
+      if (!initialized) {
+        console.error('Failed to initialize game engine');
+        return;
+      }
+
+      // Setup restart button
+      document.getElementById('restart-button').addEventListener('click', () => {
+        console.log('Restarting game...');
+        gameEngine.getStateManager().setState(GameState.PLAYING);
+        
+        // Reset demo stats
+        document.getElementById('stat-health').textContent = '100';
+        document.getElementById('stat-gold').textContent = '500';
+        document.getElementById('stat-wave').textContent = '1';
       });
 
-      // Draw player
-      ctx.fillStyle = '#667eea';
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
+      // Demo: Register update callback
+      gameEngine.onUpdate((deltaTime) => {
+        // Game logic will be added here in future tasks
+      });
 
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
-    }
+      // Demo: Register render callback
+      gameEngine.onRender((renderer) => {
+        // Custom rendering will be added here in future tasks
+      });
 
-    // Keyboard input
-    window.addEventListener('keydown', (e) => {
-      keys[e.key] = true;
-    });
+      // Demo: Test state transitions after 3 seconds
+      setTimeout(() => {
+        console.log('Demo: Testing victory state...');
+        // Uncomment to test: gameEngine.getStateManager().setState(GameState.VICTORY);
+      }, 3000);
 
-    window.addEventListener('keyup', (e) => {
-      keys[e.key] = false;
-    });
+      // Start game loop
+      gameEngine.start();
 
-    // Initialize and start
-    initHUD();
-    initGame();
-    gameLoop();
+      console.log('Game engine started successfully!');
+    })();
   </script>
 </body>
 </html>
