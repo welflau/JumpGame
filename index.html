@@ -594,33 +594,28 @@
 
       draw() {
         if (!this.alive) return;
-
+        
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
 
         // Body
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(0, 8, 32, 24);
-
+        
         // Eyes
         ctx.fillStyle = '#fff';
         ctx.fillRect(8, 12, 6, 6);
         ctx.fillRect(18, 12, 6, 6);
-
+        
         ctx.fillStyle = '#000';
-        const eyeOffset = this.animFrame * 2;
-        ctx.fillRect(10 + eyeOffset, 14, 3, 3);
-        ctx.fillRect(20 + eyeOffset, 14, 3, 3);
-
+        ctx.fillRect(10, 14, 3, 3);
+        ctx.fillRect(20, 14, 3, 3);
+        
         // Spikes
         ctx.fillStyle = '#c0392b';
         for (let i = 0; i < 4; i++) {
-          ctx.beginPath();
-          ctx.moveTo(i * 8 + 4, 8);
-          ctx.lineTo(i * 8, 0);
-          ctx.lineTo(i * 8 + 8, 0);
-          ctx.closePath();
-          ctx.fill();
+          const offset = this.animFrame === 0 ? 0 : 2;
+          ctx.fillRect(i * 8, offset, 8, 4);
         }
 
         ctx.restore();
@@ -639,7 +634,7 @@
         this.collected = false;
         this.animFrame = 0;
         this.animTimer = 0;
-        this.floatOffset = Math.random() * Math.PI * 2;
+        this.bobOffset = 0;
       }
 
       update() {
@@ -648,31 +643,26 @@
           this.animFrame = (this.animFrame + 1) % 8;
           this.animTimer = 0;
         }
+        this.bobOffset = Math.sin(Date.now() / 200) * 3;
       }
 
       draw() {
         if (this.collected) return;
-
-        const floatY = Math.sin(Date.now() / 200 + this.floatOffset) * 3;
-
+        
         ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + floatY);
-
-        // Rotation effect
-        const scale = Math.abs(Math.cos(this.animFrame * Math.PI / 4));
-        ctx.scale(scale, 1);
-
-        // Coin
+        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + this.bobOffset);
+        ctx.rotate(this.animFrame * Math.PI / 4);
+        
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-
+        
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.arc(0, 0, 7, 0, Math.PI * 2);
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.fill();
-
+        
         ctx.restore();
       }
     }
@@ -696,23 +686,66 @@
       draw() {
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
-
+        
         // Pole
         ctx.fillStyle = '#7f8c8d';
         ctx.fillRect(0, 0, 4, 80);
-
+        
         // Flag
         ctx.fillStyle = '#2ecc71';
         ctx.beginPath();
-        ctx.moveTo(4, 0);
-        for (let i = 0; i <= 40; i += 2) {
-          const wave = Math.sin(this.waveOffset + i / 5) * 2;
-          ctx.lineTo(4 + i + wave, i);
+        ctx.moveTo(4, 10);
+        for (let i = 0; i <= 30; i += 2) {
+          const wave = Math.sin(this.waveOffset + i / 5) * 3;
+          ctx.lineTo(4 + 30 + wave, 10 + i);
         }
         ctx.lineTo(4, 40);
         ctx.closePath();
         ctx.fill();
+        
+        ctx.restore();
+      }
+    }
 
+    // ============================================
+    // Platform Class
+    // ============================================
+    class Platform {
+      constructor(x, y, width, height, type = 'normal') {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.type = type;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(-gameState.cameraX, 0);
+        
+        if (this.type === 'grass') {
+          // Grass platform
+          ctx.fillStyle = '#27ae60';
+          ctx.fillRect(this.x, this.y, this.width, 8);
+          ctx.fillStyle = '#8e44ad';
+          ctx.fillRect(this.x, this.y + 8, this.width, this.height - 8);
+        } else if (this.type === 'stone') {
+          // Stone platform
+          ctx.fillStyle = '#7f8c8d';
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+          ctx.strokeStyle = '#95a5a6';
+          ctx.lineWidth = 2;
+          for (let i = 0; i < this.width; i += 32) {
+            for (let j = 0; j < this.height; j += 32) {
+              ctx.strokeRect(this.x + i, this.y + j, 32, 32);
+            }
+          }
+        } else {
+          // Normal platform
+          ctx.fillStyle = '#34495e';
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+        
         ctx.restore();
       }
     }
@@ -724,83 +757,72 @@
       gameState.platforms = [];
       gameState.enemies = [];
       gameState.coins = [];
-      gameState.levelWidth = 3200;
+      gameState.particleSystem = [];
 
       // Ground
-      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50 });
+      gameState.platforms.push(new Platform(0, 550, gameState.levelWidth, 50, 'grass'));
 
       if (levelNum === 1) {
-        // Starting platforms
-        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20 });
-        gameState.platforms.push({ x: 400, y: 380, width: 120, height: 20 });
-        gameState.platforms.push({ x: 600, y: 320, width: 100, height: 20 });
-        gameState.platforms.push({ x: 800, y: 380, width: 150, height: 20 });
-        gameState.platforms.push({ x: 1050, y: 450, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1250, y: 380, width: 100, height: 20 });
-        gameState.platforms.push({ x: 1450, y: 320, width: 150, height: 20 });
-        gameState.platforms.push({ x: 1700, y: 400, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1900, y: 350, width: 100, height: 20 });
-        gameState.platforms.push({ x: 2100, y: 420, width: 150, height: 20 });
-        gameState.platforms.push({ x: 2350, y: 380, width: 120, height: 20 });
-        gameState.platforms.push({ x: 2600, y: 450, width: 200, height: 20 });
+        // Level 1: Tutorial
+        gameState.platforms.push(new Platform(300, 450, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(600, 350, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(900, 250, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(1200, 350, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(1500, 450, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(1800, 350, 300, 20, 'stone'));
+        gameState.platforms.push(new Platform(2200, 250, 200, 20, 'stone'));
+        gameState.platforms.push(new Platform(2500, 350, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(2800, 450, 300, 20, 'grass'));
 
         // Enemies
-        gameState.enemies.push(new Enemy(450, 330, 400, 500));
-        gameState.enemies.push(new Enemy(850, 330, 800, 930));
-        gameState.enemies.push(new Enemy(1500, 270, 1450, 1580));
-        gameState.enemies.push(new Enemy(2150, 370, 2100, 2230));
+        gameState.enemies.push(new Enemy(400, 400, 300, 500));
+        gameState.enemies.push(new Enemy(700, 300, 600, 800));
+        gameState.enemies.push(new Enemy(1300, 300, 1200, 1400));
+        gameState.enemies.push(new Enemy(1900, 300, 1800, 2100));
 
         // Coins
         for (let i = 0; i < 15; i++) {
-          const platform = gameState.platforms[Math.floor(Math.random() * (gameState.platforms.length - 1)) + 1];
-          gameState.coins.push(new Coin(
-            platform.x + Math.random() * (platform.width - 20),
-            platform.y - 40
-          ));
+          const x = 400 + i * 150;
+          const y = 200 - Math.sin(i / 2) * 50;
+          gameState.coins.push(new Coin(x, y));
         }
 
-        // Additional floating coins
-        gameState.coins.push(new Coin(300, 350));
-        gameState.coins.push(new Coin(700, 250));
-        gameState.coins.push(new Coin(1150, 350));
-        gameState.coins.push(new Coin(1800, 280));
-        gameState.coins.push(new Coin(2200, 320));
-
       } else if (levelNum === 2) {
-        // More challenging layout
-        gameState.platforms.push({ x: 150, y: 480, width: 100, height: 20 });
-        gameState.platforms.push({ x: 320, y: 420, width: 80, height: 20 });
-        gameState.platforms.push({ x: 480, y: 360, width: 100, height: 20 });
-        gameState.platforms.push({ x: 650, y: 300, width: 80, height: 20 });
-        gameState.platforms.push({ x: 800, y: 360, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1000, y: 420, width: 80, height: 20 });
-        gameState.platforms.push({ x: 1150, y: 360, width: 100, height: 20 });
-        gameState.platforms.push({ x: 1320, y: 300, width: 80, height: 20 });
-        gameState.platforms.push({ x: 1480, y: 360, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1680, y: 420, width: 100, height: 20 });
-        gameState.platforms.push({ x: 1850, y: 360, width: 80, height: 20 });
-        gameState.platforms.push({ x: 2000, y: 300, width: 100, height: 20 });
-        gameState.platforms.push({ x: 2180, y: 360, width: 120, height: 20 });
-        gameState.platforms.push({ x: 2380, y: 420, width: 100, height: 20 });
-        gameState.platforms.push({ x: 2550, y: 480, width: 150, height: 20 });
+        // Level 2: Intermediate
+        gameState.platforms.push(new Platform(200, 480, 150, 20, 'stone'));
+        gameState.platforms.push(new Platform(450, 400, 150, 20, 'stone'));
+        gameState.platforms.push(new Platform(700, 320, 150, 20, 'stone'));
+        gameState.platforms.push(new Platform(950, 240, 150, 20, 'stone'));
+        gameState.platforms.push(new Platform(1200, 320, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(1500, 400, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(1800, 300, 250, 20, 'stone'));
+        gameState.platforms.push(new Platform(2150, 200, 200, 20, 'stone'));
+        gameState.platforms.push(new Platform(2450, 300, 200, 20, 'grass'));
+        gameState.platforms.push(new Platform(2750, 400, 300, 20, 'grass'));
 
         // More enemies
-        gameState.enemies.push(new Enemy(350, 370, 320, 380));
-        gameState.enemies.push(new Enemy(680, 250, 650, 710));
-        gameState.enemies.push(new Enemy(1030, 370, 1000, 1060));
-        gameState.enemies.push(new Enemy(1350, 250, 1320, 1380));
-        gameState.enemies.push(new Enemy(1710, 370, 1680, 1760));
-        gameState.enemies.push(new Enemy(2030, 250, 2000, 2080));
-        gameState.enemies.push(new Enemy(2410, 310, 2380, 2460));
+        gameState.enemies.push(new Enemy(250, 430, 200, 350));
+        gameState.enemies.push(new Enemy(500, 350, 450, 600));
+        gameState.enemies.push(new Enemy(750, 270, 700, 850));
+        gameState.enemies.push(new Enemy(1000, 190, 950, 1100));
+        gameState.enemies.push(new Enemy(1550, 350, 1500, 1700));
+        gameState.enemies.push(new Enemy(1900, 250, 1800, 2050));
 
         // More coins
         for (let i = 0; i < 20; i++) {
-          const platform = gameState.platforms[Math.floor(Math.random() * (gameState.platforms.length - 1)) + 1];
-          gameState.coins.push(new Coin(
-            platform.x + Math.random() * (platform.width - 20),
-            platform.y - 40
-          ));
+          const x = 300 + i * 130;
+          const y = 150 - Math.sin(i / 1.5) * 40;
+          gameState.coins.push(new Coin(x, y));
         }
 
-        // Bonus coins in difficult spots
-        gameState.coins.push(new Coin(400
+      } else {
+        // Level 3+: Advanced
+        for (let i = 0; i < 15; i++) {
+          const x = 200 + i * 200;
+          const y = 450 - Math.sin(i / 2) * 100;
+          const width = 100 + Math.random() * 100;
+          gameState.platforms.push(new Platform(x, y, width, 20, i % 2 === 0 ? 'stone' : 'grass'));
+        }
+
+        // Many enemies
+        for (let i = 0; i < 10; i
