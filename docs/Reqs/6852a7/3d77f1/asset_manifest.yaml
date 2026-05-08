@@ -1,44 +1,11 @@
 # asset_manifest.yaml — 搭建游戏基础框架和Canvas渲染系统
-# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
-# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+# 由 UX Agent 自动生成初稿，美术 Agent 会补全和确认
 assets:
   - id: asset_001
     type: icon
-    description: ### type: placeholder
-    source_hint: iconify
-    status: pending
+    description: icon: 待补充
+    status: pending  # 待美术Agent确认来源和规格
   - id: asset_002
-    type: icon
-    description: ### type: placeholder
-    source_hint: iconify
-    status: pending
-  - id: asset_003
-    type: icon
-    description: ### type: font
-    source_hint: iconify
-    status: pending
-  - id: asset_004
-    type: icon
-    description: ### type: audio
-    source_hint: iconify
-    status: pending
-  - id: asset_005
-    type: icon
-    description: ### type: audio
-    source_hint: iconify
-    status: pending
-  - id: asset_006
-    type: icon
-    description: ### type: config
-    source_hint: iconify
-    status: pending
-  - id: asset_007
-    type: icon
-    description: ### type: config
-    source_hint: iconify
-    status: pending
-  - id: asset_008
-    type: icon
-    description: ### type: icon
-    source_hint: iconify
-    status: pending
+    type: illustration
+    description: illustration: 空状态图（400x300）
+    status: pending  # 待美术Agent确认来源和规格
