@@ -1,9 +1,159 @@
 # asset_manifest.yaml — [BUG] index.html 文件被截断导致游戏无法启动
-# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
-# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+# 由 UX Agent 自动生成初稿，美术 Agent 会补全和确认
 assets:
-  - id: placeholder
+  - id: asset_001
     type: icon
-    description: 待补充
-    source_hint: iconify
-    status: pending
+    description: ## 图标（Icons）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_002
+    type: icon
+    description: ### 游戏内图标
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_003
+    type: icon
+    description: heart-full**: 生命值满血图标，16x16px，实心红色心形，pixel art 风格
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_004
+    type: icon
+    description: heart-empty**: 生命值损失图标，16x16px，灰色空心心形，pixel art 风格
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_005
+    type: icon
+    description: coin**: 金币图标，24x24px，金黄色圆形硬币，pixel art 风格（用于 HUD 显示）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_006
+    type: icon
+    description: pause**: 暂停按钮图标（可选功能），24x24px，两条竖线，outline 风格
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_007
+    type: icon
+    description: play**: 继续游戏图标（可选功能），24x24px，三角形，outline 风格
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_008
+    type: icon
+    description: ### UI 装饰图标
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_009
+    type: icon
+    description: trophy**: 游戏结束界面装饰，48x48px，金色奖杯，用于高分显示
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_010
+    type: icon
+    description: star**: 分数增加时的粒子效果，12x12px，五角星，黄色发光
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_011
+    type: icon
+    description: ## 插画（Illustrations）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_012
+    type: icon
+    description: ### 空状态/错误状态
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_013
+    type: icon
+    description: loading-game**: 游戏加载界面，400x300px，简单的像素风格动画（旋转的齿轮或跳动的方块）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_014
+    type: icon
+    description: game-over-banner**: 游戏结束顶部装饰，600x150px，像素风格的 "GAME OVER" 艺术字
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_015
+    type: icon
+    description: ## 游戏实体精灵（Sprites）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_016
+    type: icon
+    description: ### 玩家角色
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_017
+    type: icon
+    description: player-idle**: 玩家静止状态，32x32px，pixel art，蓝色方块角色
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_018
+    type: icon
+    description: player-jump**: 玩家跳跃状态，32x32px，pixel art，角色向上伸展姿态
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_019
+    type: icon
+    description: player-run**: 玩家奔跑动画（2-4 帧），32x32px，pixel art，循环播放
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_020
+    type: icon
+    description: ### 敌人
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_021
+    type: icon
+    description: enemy-basic**: 基础敌人，32x32px，pixel art，红色尖刺球或怪物
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_022
+    type: icon
+    description: enemy-patrol**: 巡逻敌人动画（2 帧），32x32px，pixel art，左右移动
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_023
+    type: icon
+    description: ### 环境元素
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_024
+    type: icon
+    description: platform**: 平台贴图，可平铺，32x16px，pixel art，草地/石头纹理
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_025
+    type: icon
+    description: coin-sprite**: 金币精灵动画（4 帧），24x24px，pixel art，旋转效果
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_026
+    type: icon
+    description: background**: 背景图层，800x600px，pixel art，天空+云朵+远山（视差滚动）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_027
+    type: icon
+    description: ## 图片（Images）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_028
+    type: icon
+    description: ### 背景
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_029
+    type: icon
+    description: start-screen-bg**: 开始界面背景，800x600px，深色渐变或星空主题
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_030
+    type: icon
+    description: game-over-bg**: 游戏结束界面背景（可选），800x600px，半透明深色遮罩
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_031
+    type: icon
+    description: ## 字体（Fonts）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_032
+    type: icon
+    description: 游戏标题字体**: 像素风格字体（如 Press Start 2P），用于 "GAME OVER" 和游戏标题
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_033
+    type: icon
+    description: UI 文字字体**: 清晰易读的无衬线字体（如 Arial/Roboto），用于分数、说明文字
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_034
+    type: icon
+    description: ## 音效（可选，不在视觉范围但列出供参考）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_035
+    type: icon
+    description: jump.wav: 跳跃音效
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_036
+    type: icon
+    description: coin.wav: 收集金币音效
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_037
+    type: icon
+    description: hit.wav: 受伤音效
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_038
+    type: icon
+    description: game-over.wav: 游戏结束音效
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_039
+    type: icon
+    description: bgm.mp3: 背景音乐循环
+    status: pending  # 待美术Agent确认来源和规格
