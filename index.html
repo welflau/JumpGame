@@ -420,10 +420,10 @@
         this.jumpBufferTimer = 0;
         this.state = 'idle';
         
-        // Animation system
+        // Animation setup
         this.animations = {
           idle: new SpriteAnimation([0], 10),
-          walk: new SpriteAnimation([0, 1, 2, 3], 8),
+          run: new SpriteAnimation([0, 1, 2, 3], 6),
           jump: new SpriteAnimation([4], 10),
           fall: new SpriteAnimation([5], 10)
         };
@@ -494,21 +494,22 @@
       }
 
       updateAnimationState() {
-        let newState = 'idle';
+        const previousState = this.state;
         
         if (!this.onGround) {
           if (this.vy < 0) {
-            newState = 'jump';
+            this.state = 'jump';
           } else {
-            newState = 'fall';
+            this.state = 'fall';
           }
         } else if (Math.abs(this.vx) > 0.1) {
-          newState = 'walk';
+          this.state = 'run';
+        } else {
+          this.state = 'idle';
         }
 
-        if (this.state !== newState) {
-          this.state = newState;
-          this.currentAnimation = this.animations[newState];
+        if (this.state !== previousState) {
+          this.currentAnimation = this.animations[this.state];
           this.currentAnimation.reset();
         }
       }
@@ -585,19 +586,21 @@
         ctx.fillRect(12, 4, 3, 3);
         ctx.fillRect(17, 4, 3, 3);
         
-        // Legs (animated based on state)
+        // Legs (animated based on current animation frame)
         ctx.fillStyle = '#2c3e50';
-        if (this.state === 'walk') {
-          const frame = this.currentAnimation.getCurrentFrame();
-          const legOffset = Math.sin(frame * Math.PI / 2) * 3;
-          ctx.fillRect(8, 40, 6, 8 + legOffset);
-          ctx.fillRect(18, 40, 6, 8 - legOffset);
-        } else if (this.state === 'jump' || this.state === 'fall') {
-          ctx.fillRect(8, 40, 6, 6);
-          ctx.fillRect(18, 40, 6, 6);
+        const frame = this.currentAnimation.getCurrentFrame();
+        const legOffset = this.state === 'run' ? Math.sin(frame * Math.PI / 2) * 3 : 0;
+        ctx.fillRect(8, 40, 6, 8 + legOffset);
+        ctx.fillRect(18, 40, 6, 8 - legOffset);
+
+        // Arms (animated for running)
+        if (this.state === 'run') {
+          const armOffset = Math.sin(frame * Math.PI / 2) * 4;
+          ctx.fillRect(2, 12 + armOffset, 4, 12);
+          ctx.fillRect(26, 12 - armOffset, 4, 12);
         } else {
-          ctx.fillRect(8, 40, 6, 8);
-          ctx.fillRect(18, 40, 6, 8);
+          ctx.fillRect(2, 12, 4, 12);
+          ctx.fillRect(26, 12, 4, 12);
         }
 
         ctx.restore();
@@ -618,63 +621,57 @@
         this.patrolStart = patrolStart;
         this.patrolEnd = patrolEnd;
         this.onGround = false;
+        this.facingRight = true;
         this.alive = true;
         
-        // Animation system
+        // Animation setup
         this.animations = {
-          walk: new SpriteAnimation([0, 1], 12)
+          walk: new SpriteAnimation([0, 1], 10),
+          squashed: new SpriteAnimation([2], 10)
         };
         this.currentAnimation = this.animations.walk;
+        this.squashed = false;
+        this.squashTimer = 0;
       }
 
       update(dt) {
         if (!this.alive) return;
 
-        // Patrol movement
+        if (this.squashed) {
+          this.squashTimer--;
+          if (this.squashTimer <= 0) {
+            this.alive = false;
+          }
+          return;
+        }
+
+        // Patrol logic
         if (this.x <= this.patrolStart) {
           this.vx = CONFIG.ENEMY_SPEED;
+          this.facingRight = true;
         } else if (this.x >= this.patrolEnd) {
           this.vx = -CONFIG.ENEMY_SPEED;
+          this.facingRight = false;
         }
 
         // Apply physics
         gameState.physicsEngine.applyGravity(this, dt);
-        gameState.physicsEngine.updatePosition(this, dt);
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
 
         // Collision detection
         CollisionDetector.checkPlatformCollisions(this, gameState.platforms);
-
-        // Check collision with player
-        if (this.alive && CollisionDetector.AABB(this, gameState.player)) {
-          const playerBottom = gameState.player.y + gameState.player.height;
-          const enemyTop = this.y;
-
-          if (gameState.player.vy > 0 && playerBottom - enemyTop < 10) {
-            this.alive = false;
-            gameState.player.vy = -8;
-            gameState.score += CONFIG.ENEMY_KILL_SCORE;
-            updateHUD();
-            this.createDeathParticles();
-          } else {
-            gameState.player.takeDamage(1);
-          }
-        }
 
         // Update animation
         this.currentAnimation.update();
       }
 
-      createDeathParticles() {
-        for (let i = 0; i < 10; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 25,
-            color: '#e74c3c'
-          });
-        }
+      squash() {
+        this.squashed = true;
+        this.squashTimer = 30;
+        this.currentAnimation = this.animations.squashed;
+        this.height = 16;
+        this.y += 16;
       }
 
       draw() {
@@ -683,20 +680,39 @@
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
 
-        // Body
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(0, 8, 32, 24);
+        if (!this.facingRight) {
+          ctx.scale(-1, 1);
+          ctx.translate(-this.width, 0);
+        }
 
-        // Eyes (animated)
-        const frame = this.currentAnimation.getCurrentFrame();
-        const eyeOffset = frame * 2;
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(6 + eyeOffset, 12, 6, 6);
-        ctx.fillRect(20 + eyeOffset, 12, 6, 6);
-        
-        ctx.fillStyle = '#000';
-        ctx.fillRect(8 + eyeOffset, 14, 3, 3);
-        ctx.fillRect(22 + eyeOffset, 14, 3, 3);
+        if (this.squashed) {
+          // Squashed appearance
+          ctx.fillStyle = '#c0392b';
+          ctx.fillRect(0, 0, this.width, this.height);
+          ctx.fillStyle = '#000';
+          ctx.fillRect(8, 4, 4, 2);
+          ctx.fillRect(20, 4, 4, 2);
+        } else {
+          // Body
+          ctx.fillStyle = '#e74c3c';
+          ctx.fillRect(4, 4, 24, 24);
+          
+          // Eyes
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(8, 10, 6, 6);
+          ctx.fillRect(18, 10, 6, 6);
+          
+          ctx.fillStyle = '#000';
+          ctx.fillRect(10, 12, 3, 3);
+          ctx.fillRect(20, 12, 3, 3);
+          
+          // Animated feet
+          const frame = this.currentAnimation.getCurrentFrame();
+          const footOffset = frame === 0 ? 0 : 2;
+          ctx.fillStyle = '#c0392b';
+          ctx.fillRect(6, 28, 8, 4 + footOffset);
+          ctx.fillRect(18, 28, 8, 4 - footOffset);
+        }
 
         ctx.restore();
       }
@@ -712,29 +728,32 @@
         this.width = 20;
         this.height = 20;
         this.collected = false;
+        this.animation = new SpriteAnimation([0, 1, 2, 3, 4, 5], 5);
         this.bobOffset = 0;
-        
-        // Animation system
-        this.animations = {
-          spin: new SpriteAnimation([0, 1, 2, 3, 4, 5], 6)
-        };
-        this.currentAnimation = this.animations.spin;
+        this.bobTimer = 0;
       }
 
       update() {
         if (this.collected) return;
+        
+        this.animation.update();
+        
+        // Bobbing animation
+        this.bobTimer += 0.1;
+        this.bobOffset = Math.sin(this.bobTimer) * 3;
 
-        this.bobOffset = Math.sin(Date.now() / 200) * 3;
-
-        if (CollisionDetector.AABB(this, gameState.player)) {
-          this.collected = true;
-          gameState.score += CONFIG.COIN_VALUE;
-          updateHUD();
-          this.createCollectParticles();
+        // Check collision with player
+        const player = gameState.player;
+        if (CollisionDetector.AABB(this, player)) {
+          this.collect();
         }
+      }
 
-        // Update animation
-        this.currentAnimation.update();
+      collect() {
+        this.collected = true;
+        gameState.score += CONFIG.COIN_VALUE;
+        updateHUD();
+        this.createCollectParticles();
       }
 
       createCollectParticles() {
@@ -744,7 +763,7 @@
             y: this.y + this.height / 2,
             vx: (Math.random() - 0.5) * 4,
             vy: (Math.random() - 0.5) * 4,
-            life: 20,
+            life: 25,
             color: '#f1c40f'
           });
         }
@@ -754,83 +773,34 @@
         if (this.collected) return;
 
         ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.bobOffset + this.height / 2);
+        ctx.translate(this.x - gameState.cameraX, this.y + this.bobOffset);
 
-        // Spinning effect based on animation frame
-        const frame = this.currentAnimation.getCurrentFrame();
+        // Coin with rotation effect based on animation frame
+        const frame = this.animation.getCurrentFrame();
         const scaleX = Math.cos(frame * Math.PI / 3);
+        
+        ctx.translate(this.width / 2, this.height / 2);
         ctx.scale(scaleX, 1);
+        ctx.translate(-this.width / 2, -this.height / 2);
 
-        ctx.fillStyle = '#f1c40f';
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.fill();
-
+        // Outer circle
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.arc(this.width / 2, this.height / 2, 10, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.restore();
-      }
-    }
-
-    // ============================================
-    // Flag Class
-    // ============================================
-    class Flag {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.width = 40;
-        this.height = 80;
-        this.reached = false;
-        
-        // Animation system
-        this.animations = {
-          wave: new SpriteAnimation([0, 1, 2, 3], 10)
-        };
-        this.currentAnimation = this.animations.wave;
-      }
-
-      update() {
-        if (this.reached) return;
-
-        if (CollisionDetector.AABB(this, gameState.player)) {
-          this.reached = true;
-          levelComplete();
-        }
-
-        // Update animation
-        this.currentAnimation.update();
-      }
-
-      draw() {
-        ctx.save();
-        ctx.translate(this.x - gameState.cameraX, this.y);
-
-        // Pole
-        ctx.fillStyle = '#7f8c8d';
-        ctx.fillRect(0, 0, 4, 80);
-
-        // Flag (animated wave)
-        const frame = this.currentAnimation.getCurrentFrame();
-        const waveOffset = Math.sin(frame * Math.PI / 2) * 3;
-        
-        ctx.fillStyle = '#2ecc71';
+        // Inner circle
+        ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
-        ctx.moveTo(4, 10);
-        ctx.lineTo(40 + waveOffset, 10);
-        ctx.lineTo(40 + waveOffset, 40);
-        ctx.lineTo(4, 40);
-        ctx.closePath();
+        ctx.arc(this.width / 2, this.height / 2, 7, 0, Math.PI * 2);
         ctx.fill();
 
-        // Flag pattern
-        ctx.fillStyle = '#27ae60';
-        ctx.fillRect(4, 10, 10, 10);
-        ctx.fillRect(14 + waveOffset / 2, 20, 10, 10);
-        ctx.fillRect(24 + waveOffset, 30, 10, 10);
+        // Symbol
+        ctx.fillStyle = '#f39c12';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('$', this.width / 2, this.height / 2);
 
         ctx.restore();
       }
@@ -853,23 +823,39 @@
         ctx.translate(-gameState.cameraX, 0);
 
         if (this.type === 'grass') {
+          // Grass platform
           ctx.fillStyle = '#27ae60';
           ctx.fillRect(this.x, this.y, this.width, 8);
-          ctx.fillStyle = '#8b4513';
+          ctx.fillStyle = '#229954';
           ctx.fillRect(this.x, this.y + 8, this.width, this.height - 8);
+          
+          // Grass details
+          ctx.fillStyle = '#2ecc71';
+          for (let i = 0; i < this.width; i += 8) {
+            ctx.fillRect(this.x + i, this.y, 2, 4);
+            ctx.fillRect(this.x + i + 4, this.y, 2, 3);
+          }
         } else if (this.type === 'stone') {
+          // Stone platform
           ctx.fillStyle = '#7f8c8d';
           ctx.fillRect(this.x, this.y, this.width, this.height);
-          ctx.strokeStyle = '#95a5a6';
-          ctx.lineWidth = 2;
-          for (let i = 0; i < this.width; i += 32) {
-            for (let j = 0; j < this.height; j += 32) {
-              ctx.strokeRect(this.x + i, this.y + j, 32, 32);
+          ctx.fillStyle = '#95a5a6';
+          ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+          
+          // Stone texture
+          ctx.fillStyle = '#7f8c8d';
+          for (let i = 0; i < this.width; i += 16) {
+            for (let j = 0; j < this.height; j += 16) {
+              ctx.fillRect(this.x + i, this.y + j, 14, 1);
+              ctx.fillRect(this.x + i, this.y + j, 1, 14);
             }
           }
         } else {
-          ctx.fillStyle = '#8b4513';
+          // Normal platform
+          ctx.fillStyle = '#34495e';
           ctx.fillRect(this.x, this.y, this.width, this.height);
+          ctx.fillStyle = '#2c3e50';
+          ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
         }
 
         ctx.restore();
@@ -877,9 +863,12 @@
     }
 
     // ============================================
-    // Particle System
+    // Flag Class
     // ============================================
-    function updateParticles() {
-      for (let i = gameState.particleSystem.length - 1; i >= 0; i--) {
-        const particle = gameState.particleSystem[i];
-        particle.x
+    class Flag {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 60;
+        this.reached = false;

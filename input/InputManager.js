@@ -11,17 +11,6 @@ class InputManager {
       pause: ['Escape']
     };
     
-    this.actionStates = {
-      left: false,
-      right: false,
-      jump: false,
-      pause: false
-    };
-    
-    this.jumpPressed = false;
-    this.jumpJustPressed = false;
-    this.previousJumpState = false;
-    
     this.init();
   }
 
@@ -40,59 +29,38 @@ class InputManager {
 
   handleKeyDown(e) {
     this.keys[e.code] = true;
-    this.updateActionStates();
   }
 
   handleKeyUp(e) {
     this.keys[e.code] = false;
-    this.updateActionStates();
   }
 
-  updateActionStates() {
-    // Update directional states
-    this.actionStates.left = this.keyBindings.left.some(key => this.keys[key]);
-    this.actionStates.right = this.keyBindings.right.some(key => this.keys[key]);
-    this.actionStates.jump = this.keyBindings.jump.some(key => this.keys[key]);
-    this.actionStates.pause = this.keyBindings.pause.some(key => this.keys[key]);
+  isPressed(action) {
+    const bindings = this.keyBindings[action];
+    if (!bindings) return false;
+    return bindings.some(key => this.keys[key]);
   }
 
-  update() {
-    // Detect jump just pressed (for jump buffering)
-    this.previousJumpState = this.jumpPressed;
-    this.jumpPressed = this.actionStates.jump;
-    this.jumpJustPressed = this.jumpPressed && !this.previousJumpState;
-  }
-
-  isActionActive(action) {
-    return this.actionStates[action] || false;
-  }
-
-  isJumpJustPressed() {
-    return this.jumpJustPressed;
-  }
-
-  getHorizontalInput() {
-    let input = 0;
-    if (this.actionStates.left) input -= 1;
-    if (this.actionStates.right) input += 1;
-    return input;
+  isKeyPressed(keyCode) {
+    return this.keys[keyCode] || false;
   }
 
   reset() {
     this.keys = {};
-    this.actionStates = {
-      left: false,
-      right: false,
-      jump: false,
-      pause: false
-    };
-    this.jumpPressed = false;
-    this.jumpJustPressed = false;
-    this.previousJumpState = false;
   }
 
-  destroy() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
+  getHorizontalAxis() {
+    let axis = 0;
+    if (this.isPressed('left')) axis -= 1;
+    if (this.isPressed('right')) axis += 1;
+    return axis;
+  }
+
+  isJumpPressed() {
+    return this.isPressed('jump');
+  }
+
+  isPausePressed() {
+    return this.isPressed('pause');
   }
 }

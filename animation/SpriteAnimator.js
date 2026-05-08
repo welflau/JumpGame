@@ -1,7 +1,6 @@
 // ============================================
-// Sprite Animator - Handles sprite sheet animations
+// Sprite Animator System
 // ============================================
-
 class SpriteAnimator {
   constructor(spriteSheet, frameWidth, frameHeight) {
     this.spriteSheet = spriteSheet;
@@ -13,86 +12,66 @@ class SpriteAnimator {
     this.frameTimer = 0;
     this.isPlaying = false;
     this.loop = true;
-    this.onComplete = null;
+    this.flipX = false;
+    this.flipY = false;
   }
 
-  /**
-   * Add an animation sequence
-   * @param {string} name - Animation name
-   * @param {Array} frames - Array of frame indices
-   * @param {number} frameRate - Frames per second
-   * @param {boolean} loop - Whether animation should loop
-   */
+  // 添加动画序列
   addAnimation(name, frames, frameRate = 10, loop = true) {
     this.animations[name] = {
-      frames: frames,
-      frameRate: frameRate,
-      frameDuration: 1000 / frameRate,
+      frames: frames, // 帧索引数组 [0, 1, 2, 3]
+      frameRate: frameRate, // 每秒帧数
+      frameDuration: 1000 / frameRate, // 每帧持续时间（毫秒）
       loop: loop
     };
   }
 
-  /**
-   * Play an animation
-   * @param {string} name - Animation name
-   * @param {boolean} restart - Force restart if already playing
-   */
-  play(name, restart = false) {
-    if (!this.animations[name]) {
-      console.warn(`Animation "${name}" not found`);
+  // 播放指定动画
+  play(animationName, forceRestart = false) {
+    if (!this.animations[animationName]) {
+      console.warn(`Animation "${animationName}" not found`);
       return;
     }
 
-    if (this.currentAnimation === name && !restart) {
+    if (this.currentAnimation === animationName && !forceRestart) {
       return;
     }
 
-    this.currentAnimation = name;
+    this.currentAnimation = animationName;
     this.currentFrame = 0;
     this.frameTimer = 0;
     this.isPlaying = true;
-    this.loop = this.animations[name].loop;
+    this.loop = this.animations[animationName].loop;
   }
 
-  /**
-   * Stop current animation
-   */
+  // 停止动画
   stop() {
     this.isPlaying = false;
     this.currentFrame = 0;
     this.frameTimer = 0;
   }
 
-  /**
-   * Pause current animation
-   */
+  // 暂停动画
   pause() {
     this.isPlaying = false;
   }
 
-  /**
-   * Resume paused animation
-   */
+  // 恢复动画
   resume() {
-    if (this.currentAnimation) {
-      this.isPlaying = true;
-    }
+    this.isPlaying = true;
   }
 
-  /**
-   * Update animation state
-   * @param {number} deltaTime - Time elapsed since last update (ms)
-   */
+  // 更新动画状态
   update(deltaTime) {
-    if (!this.isPlaying || !this.currentAnimation) {
-      return;
-    }
+    if (!this.isPlaying || !this.currentAnimation) return;
 
     const animation = this.animations[this.currentAnimation];
+    if (!animation) return;
+
     this.frameTimer += deltaTime;
 
     if (this.frameTimer >= animation.frameDuration) {
-      this.frameTimer = 0;
+      this.frameTimer -= animation.frameDuration;
       this.currentFrame++;
 
       if (this.currentFrame >= animation.frames.length) {
@@ -101,182 +80,206 @@ class SpriteAnimator {
         } else {
           this.currentFrame = animation.frames.length - 1;
           this.isPlaying = false;
-          if (this.onComplete) {
-            this.onComplete();
-          }
         }
       }
     }
   }
 
-  /**
-   * Get current frame index from sprite sheet
-   * @returns {number} Frame index
-   */
-  getCurrentFrameIndex() {
-    if (!this.currentAnimation) {
-      return 0;
-    }
-    const animation = this.animations[this.currentAnimation];
-    return animation.frames[this.currentFrame];
-  }
+  // 渲染当前帧
+  render(ctx, x, y, width, height) {
+    if (!this.currentAnimation || !this.spriteSheet) return;
 
-  /**
-   * Get source rectangle for current frame
-   * @returns {Object} {x, y, width, height}
-   */
-  getCurrentFrameRect() {
-    const frameIndex = this.getCurrentFrameIndex();
+    const animation = this.animations[this.currentAnimation];
+    if (!animation) return;
+
+    const frameIndex = animation.frames[this.currentFrame];
     const framesPerRow = Math.floor(this.spriteSheet.width / this.frameWidth);
     
-    const col = frameIndex % framesPerRow;
-    const row = Math.floor(frameIndex / framesPerRow);
-
-    return {
-      x: col * this.frameWidth,
-      y: row * this.frameHeight,
-      width: this.frameWidth,
-      height: this.frameHeight
-    };
-  }
-
-  /**
-   * Draw current frame
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {number} x - Destination x
-   * @param {number} y - Destination y
-   * @param {number} width - Destination width
-   * @param {number} height - Destination height
-   * @param {boolean} flipX - Flip horizontally
-   * @param {boolean} flipY - Flip vertically
-   */
-  draw(ctx, x, y, width, height, flipX = false, flipY = false) {
-    if (!this.spriteSheet.complete || !this.currentAnimation) {
-      return;
-    }
-
-    const frame = this.getCurrentFrameRect();
+    const srcX = (frameIndex % framesPerRow) * this.frameWidth;
+    const srcY = Math.floor(frameIndex / framesPerRow) * this.frameHeight;
 
     ctx.save();
 
-    // Apply transformations for flipping
-    if (flipX || flipY) {
+    // 处理翻转
+    if (this.flipX || this.flipY) {
       ctx.translate(
-        flipX ? x + width : x,
-        flipY ? y + height : y
+        x + (this.flipX ? width : 0),
+        y + (this.flipY ? height : 0)
       );
-      ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-      x = 0;
-      y = 0;
+      ctx.scale(this.flipX ? -1 : 1, this.flipY ? -1 : 1);
+      ctx.drawImage(
+        this.spriteSheet,
+        srcX, srcY,
+        this.frameWidth, this.frameHeight,
+        0, 0,
+        width, height
+      );
+    } else {
+      ctx.drawImage(
+        this.spriteSheet,
+        srcX, srcY,
+        this.frameWidth, this.frameHeight,
+        x, y,
+        width, height
+      );
     }
-
-    ctx.drawImage(
-      this.spriteSheet,
-      frame.x, frame.y, frame.width, frame.height,
-      x, y, width, height
-    );
 
     ctx.restore();
   }
 
-  /**
-   * Set callback for animation completion
-   * @param {Function} callback
-   */
-  setOnComplete(callback) {
-    this.onComplete = callback;
+  // 设置水平翻转
+  setFlipX(flip) {
+    this.flipX = flip;
   }
 
-  /**
-   * Check if animation is currently playing
-   * @returns {boolean}
-   */
-  isAnimationPlaying() {
-    return this.isPlaying;
+  // 设置垂直翻转
+  setFlipY(flip) {
+    this.flipY = flip;
   }
 
-  /**
-   * Get current animation name
-   * @returns {string|null}
-   */
+  // 获取当前帧索引
+  getCurrentFrameIndex() {
+    if (!this.currentAnimation) return 0;
+    const animation = this.animations[this.currentAnimation];
+    return animation ? animation.frames[this.currentFrame] : 0;
+  }
+
+  // 获取当前动画名称
   getCurrentAnimation() {
     return this.currentAnimation;
   }
 
-  /**
-   * Reset to first frame of current animation
-   */
+  // 检查动画是否完成（仅对非循环动画有效）
+  isFinished() {
+    if (!this.currentAnimation || this.loop) return false;
+    const animation = this.animations[this.currentAnimation];
+    return this.currentFrame >= animation.frames.length - 1 && !this.isPlaying;
+  }
+
+  // 设置当前帧
+  setFrame(frameIndex) {
+    if (!this.currentAnimation) return;
+    const animation = this.animations[this.currentAnimation];
+    if (frameIndex >= 0 && frameIndex < animation.frames.length) {
+      this.currentFrame = frameIndex;
+    }
+  }
+
+  // 重置动画到第一帧
   reset() {
     this.currentFrame = 0;
     this.frameTimer = 0;
   }
+}
 
-  /**
-   * Set specific frame
-   * @param {number} frameIndex
-   */
-  setFrame(frameIndex) {
-    if (this.currentAnimation) {
-      const animation = this.animations[this.currentAnimation];
-      if (frameIndex >= 0 && frameIndex < animation.frames.length) {
-        this.currentFrame = frameIndex;
-        this.frameTimer = 0;
+// ============================================
+// Sprite Sheet Loader
+// ============================================
+class SpriteSheetLoader {
+  static async load(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load sprite sheet: ${src}`));
+      img.src = src;
+    });
+  }
+
+  static createFromBase64(base64Data) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load base64 sprite sheet'));
+      img.src = base64Data;
+    });
+  }
+}
+
+// ============================================
+// Animation State Machine
+// ============================================
+class AnimationStateMachine {
+  constructor(animator) {
+    this.animator = animator;
+    this.states = {};
+    this.currentState = null;
+    this.transitions = {};
+  }
+
+  // 添加状态
+  addState(name, animationName, onEnter = null, onExit = null) {
+    this.states[name] = {
+      animationName: animationName,
+      onEnter: onEnter,
+      onExit: onExit
+    };
+  }
+
+  // 添加状态转换条件
+  addTransition(fromState, toState, condition) {
+    if (!this.transitions[fromState]) {
+      this.transitions[fromState] = [];
+    }
+    this.transitions[fromState].push({
+      toState: toState,
+      condition: condition
+    });
+  }
+
+  // 设置当前状态
+  setState(stateName) {
+    if (!this.states[stateName]) {
+      console.warn(`State "${stateName}" not found`);
+      return;
+    }
+
+    if (this.currentState === stateName) return;
+
+    // 退出当前状态
+    if (this.currentState && this.states[this.currentState].onExit) {
+      this.states[this.currentState].onExit();
+    }
+
+    // 进入新状态
+    this.currentState = stateName;
+    const state = this.states[stateName];
+    
+    if (state.onEnter) {
+      state.onEnter();
+    }
+
+    this.animator.play(state.animationName);
+  }
+
+  // 更新状态机
+  update(context) {
+    if (!this.currentState) return;
+
+    const transitions = this.transitions[this.currentState];
+    if (!transitions) return;
+
+    // 检查转换条件
+    for (const transition of transitions) {
+      if (transition.condition(context)) {
+        this.setState(transition.toState);
+        break;
       }
     }
   }
 
-  /**
-   * Get total frames in current animation
-   * @returns {number}
-   */
-  getTotalFrames() {
-    if (!this.currentAnimation) {
-      return 0;
-    }
-    return this.animations[this.currentAnimation].frames.length;
-  }
-
-  /**
-   * Get current frame number (0-indexed)
-   * @returns {number}
-   */
-  getCurrentFrameNumber() {
-    return this.currentFrame;
-  }
-
-  /**
-   * Check if on last frame
-   * @returns {boolean}
-   */
-  isLastFrame() {
-    if (!this.currentAnimation) {
-      return false;
-    }
-    return this.currentFrame === this.getTotalFrames() - 1;
-  }
-
-  /**
-   * Clone animator with same sprite sheet
-   * @returns {SpriteAnimator}
-   */
-  clone() {
-    const clone = new SpriteAnimator(
-      this.spriteSheet,
-      this.frameWidth,
-      this.frameHeight
-    );
-    
-    // Copy all animations
-    for (const name in this.animations) {
-      const anim = this.animations[name];
-      clone.addAnimation(name, anim.frames, anim.frameRate, anim.loop);
-    }
-    
-    return clone;
+  // 获取当前状态
+  getCurrentState() {
+    return this.currentState;
   }
 }
 
+// ============================================
 // Export for use in other modules
+// ============================================
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = SpriteAnimator;
+  module.exports = {
+    SpriteAnimator,
+    SpriteSheetLoader,
+    AnimationStateMachine
+  };
 }
