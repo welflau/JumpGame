@@ -1,0 +1,64 @@
+# asset_manifest.yaml — 开发玩家角色系统和精灵动画
+# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
+# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+assets:
+  - id: player_idle
+    type: sprite_sheet
+    description: 玩家待机动画精灵图，32x32px/帧，4帧，横向排列，总尺寸128x32px
+    source_hint: user_provided
+    status: pending
+  - id: player_walk
+    type: sprite_sheet
+    description: 玩家行走动画精灵图，32x32px/帧，6帧，横向排列，总尺寸192x32px
+    source_hint: user_provided
+    status: pending
+  - id: player_jump
+    type: sprite_sheet
+    description: 玩家跳跃动画精灵图，32x32px/帧，3帧（起跳/空中/落地），横向排列，总尺寸96x32px
+    source_hint: user_provided
+    status: pending
+  - id: player_hurt
+    type: sprite_sheet
+    description: 玩家受伤动画精灵图，32x32px/帧，2帧，横向排列，总尺寸64x32px
+    source_hint: user_provided
+    status: pending
+  - id: heart_full
+    type: icon
+    description: 满血心形图标，16x16px，像素风格，绿色#51CF66
+    source_hint: kenney_ui_pack
+    status: pending
+  - id: heart_empty
+    type: icon
+    description: 空血心形图标，16x16px，像素风格，灰色#868E96
+    source_hint: kenney_ui_pack
+    status: pending
+  - id: footstep
+    type: audio
+    description: 脚步音效，轻快像素风，50-100ms
+    source_hint: kenney_audio
+    status: pending
+  - id: jump
+    type: audio
+    description: 跳跃音效，上升音调，200ms
+    source_hint: kenney_audio
+    status: pending
+  - id: hurt
+    type: audio
+    description: 受伤音效，短促痛苦声，150ms
+    source_hint: kenney_audio
+    status: pending
+  - id: land
+    type: audio
+    description: 落地音效，低沉撞击声，100ms
+    source_hint: kenney_audio
+    status: pending
+  - id: dust_walk
+    type: particle
+    description: 行走扬尘粒子效果，3-5个小像素点，灰白色
+    source_hint: code_generate
+    status: pending
+  - id: impact_land
+    type: particle
+    description: 落地冲击粒子效果，放射状5-8个像素点
+    source_hint: code_generate
+    status: pending

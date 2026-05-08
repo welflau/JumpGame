@@ -1,0 +1,30 @@
+{
+  "colors": {
+    "player_primary": "#FF6B6B",
+    "player_secondary": "#4ECDC4",
+    "health_full": "#51CF66",
+    "health_damaged": "#FF6B6B",
+    "health_empty": "#868E96",
+    "invincible_flash": "#FFD93D",
+    "ui_bg": "#2C2C2C",
+    "ui_border": "#4A4A4A",
+    "ui_text": "#FFFFFF"
+  },
+  "typography": {
+    "hud_base": "12px",
+    "hud_large": "16px",
+    "font_family": "'Press Start 2P', monospace"
+  },
+  "spacing": {
+    "hud_padding": "8px",
+    "hud_margin": "16px",
+    "health_gap": "4px"
+  },
+  "animation": {
+    "walk_fps": "8",
+    "idle_fps": "4",
+    "jump_fps": "6",
+    "hurt_fps": "8",
+    "invincible_blink_interval": "100ms"
+  }
+}
