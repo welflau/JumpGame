@@ -12,6 +12,5 @@
 无
 
 ## 审查的代码
-- game.js
 - index.html
 - docs/Reqs/372d1e/c2a3e9/dev-notes.md
