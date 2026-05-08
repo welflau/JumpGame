@@ -1,0 +1,22 @@
+{
+  "colors": {
+    "debug_camera_bounds": "#FF00FF",
+    "debug_safe_zone": "#00FF00",
+    "debug_target_line": "#FFFF00",
+    "debug_text": "#FFFFFF",
+    "debug_text_shadow": "#000000"
+  },
+  "typography": {
+    "debug_info": "12px",
+    "debug_font": "monospace"
+  },
+  "spacing": {
+    "debug_padding": "8px",
+    "debug_line_height": "16px"
+  },
+  "camera": {
+    "player_offset_ratio": 0.333,
+    "lerp_factor": 0.1,
+    "stop_threshold": "1px"
+  }
+}

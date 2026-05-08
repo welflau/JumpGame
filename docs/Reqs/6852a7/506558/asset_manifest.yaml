@@ -1,0 +1,34 @@
+# asset_manifest.yaml — 实现摄像机跟随系统
+# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
+# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+assets:
+  - id: debug_camera_icon
+    type: icon
+    description: Camera viewfinder icon 16x16px for debug panel header
+    source_hint: iconify (mdi:camera-outline)
+    status: pending
+  - id: debug_grid_icon
+    type: icon
+    description: Grid toggle icon 16x16px for coordinate overlay
+    source_hint: iconify (mdi:grid)
+    status: pending
+  - id: debug_font
+    type: font
+    description: Monospace font for debug text (system default acceptable)
+    source_hint: system (Consolas/Monaco/Courier New)
+    status: pending
+  - id: camera_bounds_overlay
+    type: texture
+    description: 1px transparent PNG for drawing debug rectangles (generated at runtime)
+    source_hint: procedural
+    status: pending
+  - id: grid_pattern
+    type: texture
+    description: 100x100px grid tile with 1px cyan lines (optional, for coordinate visualization)
+    source_hint: procedural
+    status: pending
+  - id: camera_settings
+    type: config
+    description: JSON config for lerp factor, offset ratio, thresholds
+    source_hint: game_config.json
+    status: pending
