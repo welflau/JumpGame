@@ -1,0 +1,74 @@
+# asset_manifest.yaml — [BUG] index.html 文件被截断导致游戏无法启动
+# 由美术 Agent 完整生成，覆盖 UX Agent 的初稿
+# status: pending=待生产 / sourced=已从资产库获取 / generated=已AI生成
+assets:
+  - id: error_warning
+    type: icon
+    description: Error warning triangle icon 48px outline style
+    source_hint: iconify:mdi:alert-circle-outline
+    status: pending
+  - id: reload_icon
+    type: icon
+    description: Reload/refresh circular arrow icon 20px
+    source_hint: iconify:mdi:reload
+    status: pending
+  - id: close_icon
+    type: icon
+    description: Close X icon 16px for dismissing modals
+    source_hint: iconify:mdi:close
+    status: pending
+  - id: loading_spinner
+    type: icon
+    description: Animated loading spinner 64px circular
+    source_hint: iconify:mdi:loading
+    status: pending
+  - id: health_heart
+    type: icon
+    description: Heart icon for health display 20px filled
+    source_hint: iconify:mdi:heart
+    status: pending
+  - id: score_star
+    type: icon
+    description: Star icon for score display 20px filled
+    source_hint: iconify:mdi:star
+    status: pending
+  - id: error_state_bg
+    type: illustration
+    description: Abstract glitch/corrupted data pattern 800x600 for error screen background
+    source_hint: ai_generate
+    status: pending
+  - id: loading_logo
+    type: illustration
+    description: Game logo/title graphic 320x120 for loading screen
+    source_hint: custom_design
+    status: pending
+  - id: error_sound
+    type: audio
+    description: Error alert sound effect 1-2s negative tone
+    source_hint: kenney:ui_sounds
+    status: pending
+  - id: button_click
+    type: audio
+    description: Button click sound effect 0.2s crisp click
+    source_hint: kenney:ui_sounds
+    status: pending
+  - id: loading_ambient
+    type: audio
+    description: Ambient loading music loop 30s calm electronic
+    source_hint: freesound
+    status: pending
+  - id: pixel_font
+    type: font
+    description: Pixel-style game font Press Start 2P or similar
+    source_hint: google_fonts:press_start_2p
+    status: pending
+  - id: health_bar_fill
+    type: sprite
+    description: Health bar fill texture 200x24 with gradient overlay
+    source_hint: procedural_generate
+    status: pending
+  - id: button_bg_9slice
+    type: sprite
+    description: 9-slice button background sprite 48x48 base size
+    source_hint: custom_design
+    status: pending
