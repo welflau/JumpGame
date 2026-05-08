@@ -7,8 +7,8 @@
     "health_empty": "#868E96",
     "invincible_flash": "#FFD93D",
     "ui_bg": "#2C2C2C",
-    "ui_border": "#4A4A4A",
-    "ui_text": "#FFFFFF"
+    "ui_text": "#FFFFFF",
+    "ui_border": "#495057"
   },
   "typography": {
     "hud_base": "12px",
@@ -24,7 +24,7 @@
     "walk_fps": "8",
     "idle_fps": "4",
     "jump_fps": "6",
-    "hurt_fps": "8",
-    "invincible_blink_interval": "100ms"
+    "hurt_flash_duration": "100ms",
+    "invincible_blink_interval": "150ms"
   }
 }
