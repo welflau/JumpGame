@@ -10,24 +10,25 @@ stateDiagram-v2
     [*] --> StartScreen: 页面加载
     StartScreen --> Initializing: DOMContentLoaded触发
     Initializing --> Ready: 事件监听器绑定成功
-    Ready --> ButtonHover: 鼠标悬停按钮
-    ButtonHover --> Ready: 鼠标移出
-    Ready --> ButtonPressed: 点击Start Game
-    ButtonPressed --> GameLoading: 触发游戏初始化
-    GameLoading --> GameScene: 游戏场景加载完成
+    Ready --> GameScene: 点击Start Game按钮
     
     note right of Initializing
-        关键修复点：
-        1. 确保DOM完全加载
-        2. querySelector找到#start-btn
-        3. addEventListener成功绑定
+        检查DOM元素存在性
+        绑定按钮点击事件
+        初始化游戏引擎
     end note
     
-    note right of ButtonPressed
-        防御性检查：
-        - 按钮存在性验证
-        - 防止重复点击
-        - Console日志确认
+    note right of Ready
+        按钮可交互状态
+        等待用户操作
+    end note
+    
+    StartScreen --> Error: 初始化失败
+    Error --> StartScreen: 刷新页面重试
+    
+    note right of Error
+        显示错误提示
+        提供重试入口
     end note
 ```
 ```
@@ -37,220 +38,180 @@ stateDiagram-v2
 ## 开始界面结构
 
 ### 主容器 (#start-screen)
-- 全屏居中布局
-- 垂直方向 flexbox
+```
+┌─────────────────────────────────────┐
+│         [游戏标题区域]              │
+│     Platform Adventure              │
+│                                     │
+│         [按钮区域]                  │
+│       ┌───────────────┐             │
+│       │  Start Game   │ (#start-btn)│
+│       └───────────────┘             │
+│                                     │
+│         [版本信息]                  │
+│          v0.1.0                     │
+└─────────────────────────────────────┘
+```
 
 ### 组件层级
-```
-#start-screen
-├── .title-container
-│   └── h1 "Platform Adventure"
-│       - 游戏标题
-│       - 居中对齐
-│
-└── .button-container
-    └── button#start-btn
-        - 文本："Start Game"
-        - 主操作按钮
-        - 居中对齐
-```
+- **容器层**：全屏居中容器，垂直布局
+- **标题层**：游戏名称文本
+- **交互层**：Start Game 按钮（主要交互元素）
+- **信息层**：版本号/版权信息（次要信息）
 
-### 关键 DOM 元素
-- **#start-btn**（修复目标）
-  - 必须在 DOMContentLoaded 后可查询
-  - 需要绑定 click 事件监听器
-  - 点击后触发游戏初始化函数
-
-### 调试辅助元素（开发阶段）
-- Console 日志输出点：
-  1. DOMContentLoaded 触发确认
-  2. querySelector 查询结果
-  3. 事件监听器绑定确认
-  4. 按钮点击事件触发确认
+### 关键元素
+- `#start-btn`：主操作按钮，触发游戏开始
+- 按钮需要明确的视觉焦点（最大视觉权重）
+- 无其他干扰元素，保持界面简洁
 
 ## 交互状态定义
 
 ## Start Game 按钮状态
 
-### 1. 默认（normal）
-- 可点击状态
+### 1. 默认状态（normal）
+- 按钮可见且可点击
+- 显示完整文本 "Start Game"
+- 具有明确的可点击视觉暗示
+
+### 2. 悬停状态（hover）- Web端
+- 鼠标悬停时触发
+- 视觉反馈：轻微放大（scale 1.05）或亮度提升
 - cursor: pointer
-- 视觉：实心背景 + 白色文字
+- 过渡动画：150ms ease-out
 
-### 2. 悬停（hover）
-- Web 端鼠标悬停时
-- 视觉变化：背景亮度提升 10%
-- transition: 0.2s ease
+### 3. 按下状态（active）
+- 鼠标按下或触摸时触发
+- 视觉反馈：缩小（scale 0.95）
+- 亮度降低或添加内阴影效果
+- 过渡动画：100ms ease-in
 
-### 3. 按下（active）
-- 鼠标按下或触摸时
-- transform: scale(0.95)
-- 视觉：背景亮度降低 10%
-- transition: 0.1s ease
-
-### 4. 禁用（disabled）
-- 游戏加载中时自动禁用
+### 4. 禁用状态（disabled）
+- 游戏初始化未完成时
 - opacity: 0.5
 - cursor: not-allowed
-- pointer-events: none
-- 防止重复点击
+- 不响应任何点击事件
+- 可选：显示加载指示器
 
-### 5. 加载中（loading）
-- 点击后立即进入此状态
-- 文本变为 "Loading..."
-- 可选：添加旋转 spinner 图标
-- 禁用点击事件
+### 5. 加载状态（loading）
+- 点击后到游戏场景加载完成期间
+- 按钮文本变为 "Loading..." 或显示 spinner
+- 禁止重复点击（防抖处理）
+- 可选：显示加载进度百分比
 
-### 6. 错误（error）
+### 6. 错误状态（error）
 - 游戏初始化失败时
-- 按钮文本变为 "Retry"
-- 背景色变为警告色
-- 1.5s 后恢复为默认状态
+- 按钮文本变为 "Retry" 或 "Error - Click to Retry"
+- 可选：红色边框提示
+- 点击后重新执行初始化流程
 
 ## 页面级状态
 
 ### 初始化中（Initializing）
-- DOMContentLoaded 触发后
-- 事件监听器绑定过程
-- Console 输出："Initializing game..."
+- 显示加载指示器（可选）
+- Start Game 按钮禁用
+- 可选：显示 "Initializing..." 提示文本
 
-### 就绪（Ready）
-- 所有事件监听器绑定完成
-- 按钮可交互
-- Console 输出："Game ready, click Start to begin"
-
-### 游戏加载中（Game Loading）
-- 点击按钮后
-- 开始界面可选淡出动画（fade-out 0.3s）
-- 按钮进入 loading 状态
+### 就绪状态（Ready）
+- Start Game 按钮启用
+- 所有交互状态正常响应
+- 无错误提示信息
 
 ### 错误状态（Error）
-- 游戏初始化失败
-- 显示错误提示（Toast 或内联文本）
-- 按钮变为 Retry 状态
-- 提供重试机制
+- 显示错误提示信息（Toast 或内联文本）
+- 提示内容："Failed to initialize game. Please refresh."
+- 提供刷新页面或重试按钮
+- Start Game 按钮变为 Retry 状态
+
+### 空状态（不适用）
+- 此界面无数据加载，不存在空状态
 
 ## 响应式/适配规则
 
-## 响应式断点
+## 断点定义
+- **Mobile**: < 768px（手机竖屏/横屏）
+- **Tablet**: 768px - 1024px（平板）
+- **Desktop**: > 1024px（桌面浏览器）
 
-### Mobile（< 768px）
-- 开始界面全屏垂直居中
-- 标题字号：相对单位（建议 2.5rem）
-- 按钮宽度：80% 容器宽度，最大 300px
+## 布局适配规则
+
+### Mobile (< 768px)
+- 全屏垂直居中布局
+- 标题字号：相对单位（适配小屏）
+- 按钮宽度：80% 容器宽度，最小 200px
 - 按钮高度：48px（符合触摸目标最小尺寸）
 - 垂直间距：标题与按钮间距 40px
+- 触摸优化：按钮周围留足空白（防误触）
 
-### Tablet（768px - 1024px）
-- 标题字号：3rem
-- 按钮宽度：60% 容器宽度，最大 400px
+### Tablet (768px - 1024px)
+- 垂直居中布局保持
+- 标题字号：略大于 Mobile
+- 按钮宽度：固定 300px 或 60% 容器宽度（取较小值）
 - 按钮高度：56px
 - 垂直间距：标题与按钮间距 60px
+- 支持鼠标悬停效果
 
-### Desktop（> 1024px）
-- 标题字号：4rem
-- 按钮宽度：固定 400px
+### Desktop (> 1024px)
+- 垂直居中布局
+- 标题字号：最大尺寸
+- 按钮宽度：固定 320px
 - 按钮高度：64px
 - 垂直间距：标题与按钮间距 80px
-- hover 效果启用（移动端禁用 hover）
+- 完整鼠标交互效果（hover/active）
 
 ## 交互适配
+- **Mobile/Tablet**: 禁用 hover 效果，仅保留 active 状态
+- **Desktop**: 完整 hover + active 状态
+- **触摸设备**: 按钮最小触摸区域 44x44px（iOS 规范）
 
-### 触摸设备
-- 按钮最小触摸区域：44x44px（iOS 规范）
-- 禁用 hover 伪类（通过 @media (hover: hover) 判断）
-- active 状态反馈更明显（scale 0.92）
+## 方向适配
+- **竖屏（Portrait）**: 默认布局
+- **横屏（Landscape）**: 保持垂直居中，可适当缩小间距
 
-### 键盘导航
-- 按钮支持 Tab 键聚焦
-- 聚焦时显示 outline（2px 主色）
-- Enter/Space 键触发点击
-
-## 性能优化
-- 使用 transform 而非 width/height 做动画（GPU 加速）
-- 事件监听器使用 passive: true（滚动性能）
-- 避免在 hover/active 时触发 reflow
+## 性能考虑
+- 使用 CSS 媒体查询实现响应式
+- 避免 JavaScript 监听 resize 事件
+- 动画使用 transform（GPU 加速）而非 width/height
 
 ## UI 资产清单（初稿）
 
-## 图标（Icons）
+## 图标资源（Icons）
+- **无需图标**：当前界面为纯文本按钮，无图标需求
+- **可选优化**：按钮内添加 play 图标（▶️，16px，solid 风格，按钮文本左侧）
 
-### 1. Loading Spinner
-- **用途**：按钮 loading 状态指示器
-- **尺寸**：20x20px
-- **风格**：简约圆环旋转动画
-- **格式**：SVG 或 CSS 动画
-- **颜色**：白色（叠加在按钮背景上）
+## 插画资源（Illustrations）
+- **无需插画**：开始界面为极简设计，无插画需求
+- **可选优化**：背景装饰性插画（游戏主题相关，如平台/角色剪影，全屏背景，低透明度）
 
-### 2. Retry Icon（可选）
-- **用途**：错误状态下的重试按钮图标
-- **尺寸**：24x24px
-- **风格**：圆形箭头（顺时针）
-- **格式**：SVG
-- **颜色**：继承按钮文字颜色
+## 图片资源（Images）
+- **背景图**（可选）：
+  - 用途：开始界面背景
+  - 尺寸：1920x1080（适配桌面），提供 @2x 版本
+  - 格式：WebP（优先）或 JPG
+  - 要求：低饱和度/模糊处理，不干扰前景文本可读性
 
-## 插画（Illustrations）
+- **Logo 图**（可选）：
+  - 用途：替代文本标题 "Platform Adventure"
+  - 尺寸：400x120（宽高比约 3:1）
+  - 格式：SVG（矢量）或 PNG（透明背景）
+  - 要求：高对比度，适配深色/浅色背景
 
-### 1. Error State Illustration（可选）
-- **用途**：游戏初始化失败时显示
-- **描述**：简约的错误提示图（如断开的插头/感叹号）
-- **尺寸**：200x200px
-- **风格**：扁平化，与游戏主题一致
-- **位置**：按钮上方或替换标题区域
+## 动效资源（Animations）
+- **按钮点击反馈**：CSS transition 实现，无需额外资源
+- **加载动画**（可选）：
+  - Spinner 或进度条
+  - 使用 CSS 动画或 SVG 动画
+  - 颜色：与按钮主色一致
 
-## 背景资源（Backgrounds）
+## 字体资源（Fonts）
+- **标题字体**：粗体/加粗，游戏风格字体（如 Press Start 2P / Orbitron）
+- **按钮字体**：中等粗细，清晰易读
+- **备用字体栈**：sans-serif 系统字体
 
-### 1. Start Screen Background
-- **用途**：开始界面背景
-- **尺寸**：响应式（cover 模式）
-- **建议**：渐变色或低饱和度游戏场景截图
-- **格式**：WebP（备用 JPG）
-- **优化**：< 200KB
+## 音效资源（Audio）- 游戏相关
+- **按钮点击音效**：短促的确认音（50-100ms，格式：MP3/OGG）
+- **背景音乐**（可选）：循环播放的轻音乐（格式：MP3，< 2MB）
 
-## 调试资源（开发阶段）
-
-### 1. Console 日志图标（可选）
-- **用途**：开发模式下在页面显示初始化状态
-- **类型**：文本标签或小型状态指示器
-- **位置**：页面右下角
-- **内容**：
-  - ✅ DOM Loaded
-  - ✅ Event Bound
-  - ✅ Ready to Start
-
-## 字体资源
-
-### 游戏标题字体
-- **要求**：支持英文，具有游戏感
-- **备选方案**：系统字体栈（'Press Start 2P', monospace, sans-serif）
-- **加载策略**：font-display: swap（避免 FOIT）
-
-## 音效资源（可选）
-
-### 1. Button Click Sound
-- **用途**：按钮点击反馈
-- **格式**：MP3/OGG
-- **时长**：< 0.5s
-- **音量**：可配置（默认 50%）
-
-### 2. Error Sound
-- **用途**：初始化失败提示
-- **格式**：MP3/OGG
-- **时长**：< 1s
-
----
-
-## 资源加载优先级
-
-**关键路径（必须同步加载）**：
-- #start-btn DOM 元素
-- 事件监听器脚本
-
-**次要资源（可延迟加载）**：
-- 背景图片
-- 自定义字体
-- 音效文件
-
-**开发调试资源（生产环境移除）**：
-- Console 日志
-- 状态指示器
+## 当前 Bug 修复无需新增资源
+- 本次修复为功能性 Bug（事件绑定问题）
+- 无需新增任何 UI 资产
+- 现有界面结构保持不变
