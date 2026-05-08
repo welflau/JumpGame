@@ -1,16 +1,40 @@
 {
   "colors": {
-    "primary": "#4F46E5",
-    "bg": "#F9FAFB",
-    "text": "#111827"
+    "canvas_bg": "#1a1a2e",
+    "loading_bg": "#16213e",
+    "loading_text": "#eef4ed",
+    "loading_progress_bg": "#0f3460",
+    "loading_progress_fill": "#e94560",
+    "playing_bg": "#0f3460",
+    "ui_text": "#eef4ed",
+    "ui_text_shadow": "#000000",
+    "debug_text": "#00ff00"
   },
   "typography": {
-    "base": "14px"
+    "loading_title": "32px",
+    "loading_progress": "16px",
+    "ui_hud": "14px",
+    "debug_info": "12px",
+    "font_family": "'Press Start 2P', 'Courier New', monospace"
   },
   "spacing": {
-    "md": "16px"
+    "canvas_width": "800px",
+    "canvas_height": "600px",
+    "loading_bar_width": "400px",
+    "loading_bar_height": "24px",
+    "loading_bar_border": "2px",
+    "ui_padding": "16px",
+    "text_shadow_offset": "2px"
   },
-  "radius": {
-    "md": "8px"
+  "rendering": {
+    "target_fps": 60,
+    "pixel_perfect": true,
+    "image_smoothing": false,
+    "layer_order": [
+      "background",
+      "entities",
+      "ui",
+      "debug"
+    ]
   }
 }
