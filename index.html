@@ -601,16 +601,18 @@
         // Body
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(0, 8, 32, 24);
-        
+
         // Eyes
         ctx.fillStyle = '#fff';
         ctx.fillRect(8, 12, 6, 6);
         ctx.fillRect(18, 12, 6, 6);
-        
+
+        // Pupils
         ctx.fillStyle = '#000';
-        ctx.fillRect(10 + this.animFrame, 14, 3, 3);
-        ctx.fillRect(20 + this.animFrame, 14, 3, 3);
-        
+        const pupilOffset = this.animFrame * 2;
+        ctx.fillRect(10 + pupilOffset, 14, 3, 3);
+        ctx.fillRect(20 + pupilOffset, 14, 3, 3);
+
         // Spikes
         ctx.fillStyle = '#c0392b';
         for (let i = 0; i < 4; i++) {
@@ -652,22 +654,33 @@
       draw() {
         if (this.collected) return;
 
-        const floatY = Math.sin(Date.now() / 500 + this.floatOffset) * 5;
-        
+        const floatY = Math.sin(Date.now() / 300 + this.floatOffset) * 5;
+
         ctx.save();
         ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + floatY);
-        ctx.rotate(this.animFrame * Math.PI / 4);
 
-        // Coin
-        ctx.fillStyle = '#f1c40f';
+        // Rotation effect
+        const scale = Math.abs(Math.cos(this.animFrame * Math.PI / 4));
+        ctx.scale(scale, 1);
+
+        // Outer circle
+        ctx.fillStyle = '#f39c12';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.fillStyle = '#f39c12';
+
+        // Inner circle
+        ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 7, 0, Math.PI * 2);
         ctx.fill();
+
+        // Symbol
+        ctx.fillStyle = '#f39c12';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('$', 0, 0);
 
         ctx.restore();
       }
@@ -700,14 +713,19 @@
         // Flag
         ctx.fillStyle = '#2ecc71';
         ctx.beginPath();
-        ctx.moveTo(4, 0);
-        for (let i = 0; i <= 40; i += 5) {
-          const wave = Math.sin(this.waveOffset + i / 10) * 3;
-          ctx.lineTo(4 + i + wave, i);
+        ctx.moveTo(4, 10);
+        for (let i = 0; i <= 30; i++) {
+          const wave = Math.sin(this.waveOffset + i / 5) * 3;
+          ctx.lineTo(4 + 30 + wave, 10 + i);
         }
         ctx.lineTo(4, 40);
         ctx.closePath();
         ctx.fill();
+
+        // Flag detail
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(8, 15, 8, 8);
+        ctx.fillRect(8, 27, 8, 8);
 
         ctx.restore();
       }
@@ -723,89 +741,62 @@
       gameState.particleSystem = [];
 
       // Ground
-      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50 });
+      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50, color: '#2c3e50' });
 
       if (levelNum === 1) {
-        // Platforms
-        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20 });
-        gameState.platforms.push({ x: 450, y: 380, width: 120, height: 20 });
-        gameState.platforms.push({ x: 650, y: 320, width: 100, height: 20 });
-        gameState.platforms.push({ x: 850, y: 380, width: 150, height: 20 });
-        gameState.platforms.push({ x: 1100, y: 450, width: 200, height: 20 });
-        gameState.platforms.push({ x: 1400, y: 380, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1600, y: 320, width: 150, height: 20 });
-        gameState.platforms.push({ x: 1850, y: 400, width: 100, height: 20 });
-        gameState.platforms.push({ x: 2050, y: 350, width: 150, height: 20 });
-        gameState.platforms.push({ x: 2300, y: 420, width: 120, height: 20 });
-        gameState.platforms.push({ x: 2550, y: 380, width: 200, height: 20 });
-        gameState.platforms.push({ x: 2850, y: 450, width: 150, height: 20 });
+        // Starting platforms
+        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 400, y: 380, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 600, y: 320, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 850, y: 380, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1050, y: 450, width: 200, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1350, y: 380, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1600, y: 320, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1800, y: 400, width: 180, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2100, y: 350, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2350, y: 450, width: 200, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2650, y: 380, width: 150, height: 20, color: '#34495e' });
 
         // Enemies
-        gameState.enemies.push(new Enemy(400, 500, 350, 550));
-        gameState.enemies.push(new Enemy(900, 330, 850, 1000));
-        gameState.enemies.push(new Enemy(1450, 330, 1400, 1520));
-        gameState.enemies.push(new Enemy(2100, 300, 2050, 2200));
-        gameState.enemies.push(new Enemy(2600, 330, 2550, 2750));
+        gameState.enemies.push(new Enemy(500, 330, 400, 600));
+        gameState.enemies.push(new Enemy(1100, 400, 1050, 1250));
+        gameState.enemies.push(new Enemy(1700, 270, 1600, 1800));
+        gameState.enemies.push(new Enemy(2200, 300, 2100, 2350));
 
         // Coins
         for (let i = 0; i < 15; i++) {
-          const x = 300 + i * 180;
-          const y = 250 - Math.sin(i / 2) * 50;
-          gameState.coins.push(new Coin(x, y));
+          const platformIndex = Math.floor(Math.random() * (gameState.platforms.length - 1)) + 1;
+          const platform = gameState.platforms[platformIndex];
+          gameState.coins.push(new Coin(
+            platform.x + Math.random() * (platform.width - 20),
+            platform.y - 40
+          ));
         }
+
+        // Additional floating coins
+        gameState.coins.push(new Coin(300, 350));
+        gameState.coins.push(new Coin(700, 250));
+        gameState.coins.push(new Coin(1500, 280));
+        gameState.coins.push(new Coin(2000, 300));
+
       } else if (levelNum === 2) {
         // More challenging level
-        gameState.platforms.push({ x: 150, y: 480, width: 100, height: 20 });
-        gameState.platforms.push({ x: 350, y: 420, width: 80, height: 20 });
-        gameState.platforms.push({ x: 520, y: 360, width: 100, height: 20 });
-        gameState.platforms.push({ x: 720, y: 300, width: 80, height: 20 });
-        gameState.platforms.push({ x: 900, y: 360, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1100, y: 420, width: 100, height: 20 });
-        gameState.platforms.push({ x: 1300, y: 360, width: 150, height: 20 });
-        gameState.platforms.push({ x: 1550, y: 300, width: 100, height: 20 });
-        gameState.platforms.push({ x: 1750, y: 380, width: 120, height: 20 });
-        gameState.platforms.push({ x: 1970, y: 320, width: 100, height: 20 });
-        gameState.platforms.push({ x: 2170, y: 400, width: 150, height: 20 });
-        gameState.platforms.push({ x: 2420, y: 350, width: 120, height: 20 });
-        gameState.platforms.push({ x: 2640, y: 420, width: 200, height: 20 });
-        gameState.platforms.push({ x: 2940, y: 380, width: 150, height: 20 });
+        gameState.platforms.push({ x: 150, y: 480, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 320, y: 420, width: 80, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 480, y: 360, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 650, y: 300, width: 80, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 800, y: 250, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1000, y: 320, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1200, y: 400, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1450, y: 340, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1650, y: 280, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 1850, y: 350, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2050, y: 420, width: 150, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2300, y: 360, width: 100, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2500, y: 300, width: 120, height: 20, color: '#34495e' });
+        gameState.platforms.push({ x: 2700, y: 400, width: 150, height: 20, color: '#34495e' });
 
         // More enemies
-        gameState.enemies.push(new Enemy(200, 430, 150, 250));
-        gameState.enemies.push(new Enemy(570, 310, 520, 620));
-        gameState.enemies.push(new Enemy(950, 310, 900, 1020));
-        gameState.enemies.push(new Enemy(1350, 310, 1300, 1450));
-        gameState.enemies.push(new Enemy(1600, 250, 1550, 1650));
-        gameState.enemies.push(new Enemy(2000, 270, 1970, 2070));
-        gameState.enemies.push(new Enemy(2470, 300, 2420, 2540));
-        gameState.enemies.push(new Enemy(2700, 370, 2640, 2840));
-
-        // More coins
-        for (let i = 0; i < 20; i++) {
-          const x = 250 + i * 140;
-          const y = 200 - Math.sin(i / 1.5) * 60;
-          gameState.coins.push(new Coin(x, y));
-        }
-      }
-
-      // Flag at the end
-      gameState.flag = new Flag(gameState.levelWidth - 150, 470);
-
-      // Reset player
-      gameState.player = new Player(100, 400);
-      gameState.cameraX = 0;
-    }
-
-    // ============================================
-    // Game Loop
-    // ============================================
-    function gameLoop(timestamp) {
-      if (!gameState.running) return;
-
-      // Calculate delta time
-      const deltaTime = timestamp - gameState.lastFrameTime;
-      gameState.lastFrameTime = timestamp;
-      gameState.deltaTime = Math.min(deltaTime / (1000 / CONFIG.TARGET_FPS), 2);
-
-      // FPS calculation
-      gameState.
+        gameState.enemies.push(new Enemy(400, 310, 320, 580));
+        gameState.enemies.push(new Enemy(750, 200, 650, 920));
+        gameState.enemies.push

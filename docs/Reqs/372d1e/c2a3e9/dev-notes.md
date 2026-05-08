@@ -1,9 +1,9 @@
 # 开发笔记 — [BUG] Start Game 按钮点击无响应 - 事件监听器未绑定
 
-> 2026-05-08 22:20 | LLM
+> 2026-05-08 22:23 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23411 chars)
+- [index.html](/app#repo?file=index.html) (23395 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
@@ -22,7 +22,7 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -557,6 +557,255 @@
+@@ -557,6 +557,246 @@
        constructor(x, y, patrolStart, patrolEnd) {
 
          this.x = x;
@@ -33,7 +33,7 @@
 
 -
 
--/* ... [文件截断显示：原文 23470 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+-/* ... [文件截断显示：原文 23411 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
 +        this.width = 32;
 
 +        this.height = 32;
@@ -116,5 +116,5 @@
 
 +
 
-... (共 261 行变更)
+... (共 252 行变更)
 ```
