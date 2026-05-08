@@ -239,6 +239,35 @@
     };
 
     // ============================================
+    // Sprite Animation System
+    // ============================================
+    class SpriteAnimation {
+      constructor(frames, frameDelay) {
+        this.frames = frames;
+        this.frameDelay = frameDelay;
+        this.currentFrame = 0;
+        this.frameTimer = 0;
+      }
+
+      update() {
+        this.frameTimer++;
+        if (this.frameTimer >= this.frameDelay) {
+          this.currentFrame = (this.currentFrame + 1) % this.frames.length;
+          this.frameTimer = 0;
+        }
+      }
+
+      getCurrentFrame() {
+        return this.frames[this.currentFrame];
+      }
+
+      reset() {
+        this.currentFrame = 0;
+        this.frameTimer = 0;
+      }
+    }
+
+    // ============================================
     // Physics Engine
     // ============================================
     class PhysicsEngine {
@@ -389,8 +418,16 @@
         this.invincibleTimer = 0;
         this.coyoteTimer = 0;
         this.jumpBufferTimer = 0;
-        this.animFrame = 0;
-        this.animTimer = 0;
+        this.state = 'idle';
+        
+        // Animation system
+        this.animations = {
+          idle: new SpriteAnimation([0], 10),
+          walk: new SpriteAnimation([0, 1, 2, 3], 8),
+          jump: new SpriteAnimation([4], 10),
+          fall: new SpriteAnimation([5], 10)
+        };
+        this.currentAnimation = this.animations.idle;
       }
 
       update(dt) {
@@ -451,15 +488,28 @@
           }
         }
 
-        // Animation
-        if (Math.abs(this.vx) > 0.1) {
-          this.animTimer++;
-          if (this.animTimer > 8) {
-            this.animFrame = (this.animFrame + 1) % 4;
-            this.animTimer = 0;
+        // Update animation state
+        this.updateAnimationState();
+        this.currentAnimation.update();
+      }
+
+      updateAnimationState() {
+        let newState = 'idle';
+        
+        if (!this.onGround) {
+          if (this.vy < 0) {
+            newState = 'jump';
+          } else {
+            newState = 'fall';
           }
-        } else {
-          this.animFrame = 0;
+        } else if (Math.abs(this.vx) > 0.1) {
+          newState = 'walk';
+        }
+
+        if (this.state !== newState) {
+          this.state = newState;
+          this.currentAnimation = this.animations[newState];
+          this.currentAnimation.reset();
         }
       }
 
@@ -535,11 +585,20 @@
         ctx.fillRect(12, 4, 3, 3);
         ctx.fillRect(17, 4, 3, 3);
         
-        // Legs (animated)
+        // Legs (animated based on state)
         ctx.fillStyle = '#2c3e50';
-        const legOffset = Math.sin(this.animFrame * Math.PI / 2) * 2;
-        ctx.fillRect(8, 40, 6, 8 + legOffset);
-        ctx.fillRect(18, 40, 6, 8 - legOffset);
+        if (this.state === 'walk') {
+          const frame = this.currentAnimation.getCurrentFrame();
+          const legOffset = Math.sin(frame * Math.PI / 2) * 3;
+          ctx.fillRect(8, 40, 6, 8 + legOffset);
+          ctx.fillRect(18, 40, 6, 8 - legOffset);
+        } else if (this.state === 'jump' || this.state === 'fall') {
+          ctx.fillRect(8, 40, 6, 6);
+          ctx.fillRect(18, 40, 6, 6);
+        } else {
+          ctx.fillRect(8, 40, 6, 8);
+          ctx.fillRect(18, 40, 6, 8);
+        }
 
         ctx.restore();
       }
@@ -559,12 +618,19 @@
         this.patrolStart = patrolStart;
         this.patrolEnd = patrolEnd;
         this.onGround = false;
-        this.animFrame = 0;
-        this.animTimer = 0;
+        this.alive = true;
+        
+        // Animation system
+        this.animations = {
+          walk: new SpriteAnimation([0, 1], 12)
+        };
+        this.currentAnimation = this.animations.walk;
       }
 
       update(dt) {
-        // Patrol logic
+        if (!this.alive) return;
+
+        // Patrol movement
         if (this.x <= this.patrolStart) {
           this.vx = CONFIG.ENEMY_SPEED;
         } else if (this.x >= this.patrolEnd) {
@@ -578,37 +644,24 @@
         // Collision detection
         CollisionDetector.checkPlatformCollisions(this, gameState.platforms);
 
-        // Animation
-        this.animTimer++;
-        if (this.animTimer > 10) {
-          this.animFrame = (this.animFrame + 1) % 2;
-          this.animTimer = 0;
-        }
-
         // Check collision with player
-        if (CollisionDetector.AABB(this, gameState.player)) {
+        if (this.alive && CollisionDetector.AABB(this, gameState.player)) {
           const playerBottom = gameState.player.y + gameState.player.height;
           const enemyTop = this.y;
-          
+
           if (gameState.player.vy > 0 && playerBottom - enemyTop < 10) {
-            // Player jumped on enemy
-            this.die();
-            gameState.player.vy = CONFIG.PLAYER_JUMP * 0.6;
+            this.alive = false;
+            gameState.player.vy = -8;
             gameState.score += CONFIG.ENEMY_KILL_SCORE;
             updateHUD();
+            this.createDeathParticles();
           } else {
-            // Enemy hit player
             gameState.player.takeDamage(1);
           }
         }
-      }
 
-      die() {
-        const index = gameState.enemies.indexOf(this);
-        if (index > -1) {
-          gameState.enemies.splice(index, 1);
-          this.createDeathParticles();
-        }
+        // Update animation
+        this.currentAnimation.update();
       }
 
       createDeathParticles() {
@@ -625,28 +678,25 @@
       }
 
       draw() {
+        if (!this.alive) return;
+
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
 
         // Body
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(0, 8, 32, 24);
-        
-        // Eyes
+
+        // Eyes (animated)
+        const frame = this.currentAnimation.getCurrentFrame();
+        const eyeOffset = frame * 2;
         ctx.fillStyle = '#fff';
-        ctx.fillRect(8, 12, 6, 6);
-        ctx.fillRect(18, 12, 6, 6);
+        ctx.fillRect(6 + eyeOffset, 12, 6, 6);
+        ctx.fillRect(20 + eyeOffset, 12, 6, 6);
         
         ctx.fillStyle = '#000';
-        const eyeOffset = this.vx > 0 ? 2 : -2;
-        ctx.fillRect(10 + eyeOffset, 14, 3, 3);
-        ctx.fillRect(20 + eyeOffset, 14, 3, 3);
-        
-        // Legs (animated)
-        ctx.fillStyle = '#c0392b';
-        const legBounce = this.animFrame === 0 ? 0 : 2;
-        ctx.fillRect(6, 32, 8, 4 + legBounce);
-        ctx.fillRect(18, 32, 8, 4 - legBounce);
+        ctx.fillRect(8 + eyeOffset, 14, 3, 3);
+        ctx.fillRect(22 + eyeOffset, 14, 3, 3);
 
         ctx.restore();
       }
@@ -662,35 +712,29 @@
         this.width = 20;
         this.height = 20;
         this.collected = false;
-        this.animFrame = 0;
-        this.animTimer = 0;
-        this.floatOffset = Math.random() * Math.PI * 2;
+        this.bobOffset = 0;
+        
+        // Animation system
+        this.animations = {
+          spin: new SpriteAnimation([0, 1, 2, 3, 4, 5], 6)
+        };
+        this.currentAnimation = this.animations.spin;
       }
 
       update() {
-        this.animTimer++;
-        if (this.animTimer > 5) {
-          this.animFrame = (this.animFrame + 1) % 8;
-          this.animTimer = 0;
-        }
-
-        // Check collision with player
-        if (CollisionDetector.AABB(this, gameState.player)) {
-          this.collect();
-        }
-      }
-
-      collect() {
         if (this.collected) return;
-        this.collected = true;
-        gameState.score += CONFIG.COIN_VALUE;
-        updateHUD();
-        this.createCollectParticles();
-        
-        const index = gameState.coins.indexOf(this);
-        if (index > -1) {
-          gameState.coins.splice(index, 1);
+
+        this.bobOffset = Math.sin(Date.now() / 200) * 3;
+
+        if (CollisionDetector.AABB(this, gameState.player)) {
+          this.collected = true;
+          gameState.score += CONFIG.COIN_VALUE;
+          updateHUD();
+          this.createCollectParticles();
         }
+
+        // Update animation
+        this.currentAnimation.update();
       }
 
       createCollectParticles() {
@@ -707,34 +751,86 @@
       }
 
       draw() {
-        const floatY = Math.sin(gameState.frameCount * 0.05 + this.floatOffset) * 3;
-        
+        if (this.collected) return;
+
         ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + floatY);
-        
-        // Rotate for 3D effect
-        const rotation = (this.animFrame / 8) * Math.PI * 2;
-        const scale = Math.abs(Math.cos(rotation));
-        
-        ctx.scale(scale, 1);
-        
-        // Coin
+        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.bobOffset + this.height / 2);
+
+        // Spinning effect based on animation frame
+        const frame = this.currentAnimation.getCurrentFrame();
+        const scaleX = Math.cos(frame * Math.PI / 3);
+        ctx.scale(scaleX, 1);
+
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Inner circle
+
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
         ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    // ============================================
+    // Flag Class
+    // ============================================
+    class Flag {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 80;
+        this.reached = false;
         
-        // Shine
-        ctx.fillStyle = '#fff';
+        // Animation system
+        this.animations = {
+          wave: new SpriteAnimation([0, 1, 2, 3], 10)
+        };
+        this.currentAnimation = this.animations.wave;
+      }
+
+      update() {
+        if (this.reached) return;
+
+        if (CollisionDetector.AABB(this, gameState.player)) {
+          this.reached = true;
+          levelComplete();
+        }
+
+        // Update animation
+        this.currentAnimation.update();
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x - gameState.cameraX, this.y);
+
+        // Pole
+        ctx.fillStyle = '#7f8c8d';
+        ctx.fillRect(0, 0, 4, 80);
+
+        // Flag (animated wave)
+        const frame = this.currentAnimation.getCurrentFrame();
+        const waveOffset = Math.sin(frame * Math.PI / 2) * 3;
+        
+        ctx.fillStyle = '#2ecc71';
         ctx.beginPath();
-        ctx.arc(-3, -3, 2, 0, Math.PI * 2);
+        ctx.moveTo(4, 10);
+        ctx.lineTo(40 + waveOffset, 10);
+        ctx.lineTo(40 + waveOffset, 40);
+        ctx.lineTo(4, 40);
+        ctx.closePath();
         ctx.fill();
+
+        // Flag pattern
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(4, 10, 10, 10);
+        ctx.fillRect(14 + waveOffset / 2, 20, 10, 10);
+        ctx.fillRect(24 + waveOffset, 30, 10, 10);
 
         ctx.restore();
       }
@@ -757,97 +853,24 @@
         ctx.translate(-gameState.cameraX, 0);
 
         if (this.type === 'grass') {
-          // Grass platform
           ctx.fillStyle = '#27ae60';
           ctx.fillRect(this.x, this.y, this.width, 8);
-          ctx.fillStyle = '#229954';
+          ctx.fillStyle = '#8b4513';
           ctx.fillRect(this.x, this.y + 8, this.width, this.height - 8);
-          
-          // Grass details
-          ctx.fillStyle = '#2ecc71';
-          for (let i = 0; i < this.width; i += 8) {
-            ctx.fillRect(this.x + i, this.y, 3, 4);
-          }
         } else if (this.type === 'stone') {
-          // Stone platform
           ctx.fillStyle = '#7f8c8d';
           ctx.fillRect(this.x, this.y, this.width, this.height);
-          
-          // Stone texture
-          ctx.fillStyle = '#95a5a6';
+          ctx.strokeStyle = '#95a5a6';
+          ctx.lineWidth = 2;
           for (let i = 0; i < this.width; i += 32) {
             for (let j = 0; j < this.height; j += 32) {
-              ctx.fillRect(this.x + i + 2, this.y + j + 2, 28, 28);
+              ctx.strokeRect(this.x + i, this.y + j, 32, 32);
             }
           }
         } else {
-          // Normal platform
-          ctx.fillStyle = '#34495e';
+          ctx.fillStyle = '#8b4513';
           ctx.fillRect(this.x, this.y, this.width, this.height);
-          
-          // Border
-          ctx.strokeStyle = '#2c3e50';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(this.x, this.y, this.width, this.height);
         }
-
-        ctx.restore();
-      }
-    }
-
-    // ============================================
-    // Flag Class
-    // ============================================
-    class Flag {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.width = 40;
-        this.height = 60;
-        this.animFrame = 0;
-        this.animTimer = 0;
-      }
-
-      update() {
-        this.animTimer++;
-        if (this.animTimer > 8) {
-          this.animFrame = (this.animFrame + 1) % 4;
-          this.animTimer = 0;
-        }
-
-        // Check collision with player
-        if (CollisionDetector.AABB(this, gameState.player)) {
-          levelComplete();
-        }
-      }
-
-      draw() {
-        ctx.save();
-        ctx.translate(this.x - gameState.cameraX, this.y);
-
-        // Pole
-        ctx.fillStyle = '#95a5a6';
-        ctx.fillRect(0, 0, 4, 60);
-
-        // Flag (animated wave)
-        ctx.fillStyle = '#2ecc71';
-        ctx.beginPath();
-        ctx.moveTo(4, 5);
-        
-        for (let i = 0; i <= 30; i += 5) {
-          const wave = Math.sin((i + this.animFrame * 2) * 0.3) * 2;
-          ctx.lineTo(4 + i + wave, 5 + i * 0.6);
-        }
-        
-        ctx.lineTo(4, 23);
-        ctx.closePath();
-        ctx.fill();
-
-        // Flag pole top
-        ctx.fillStyle = '#f39c12';
-        ctx.beginPath();
-        ctx.arc(2, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
 
         ctx.restore();
       }
@@ -859,18 +882,4 @@
     function updateParticles() {
       for (let i = gameState.particleSystem.length - 1; i >= 0; i--) {
         const particle = gameState.particleSystem[i];
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.vy += 0.2;
-        particle.life--;
-
-        if (particle.life <= 0) {
-          gameState.particleSystem.splice(i, 1);
-        }
-      }
-    }
-
-    function drawParticles() {
-      for (const particle of gameState.particleSystem) {
-        ctx.save();
-        ctx.globalAlpha = particle.
+        particle.x
