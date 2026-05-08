@@ -3,177 +3,221 @@
 assets:
   - id: asset_001
     type: icon
-    description: ## 图标资产
+    description: ## 图标（Icons）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_002
     type: icon
-    description: ### 1. 加载图标（可选增强）
+    description: ### 1. 加载图标
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_003
     type: icon
-    description: 用途**：按钮 loading 状态显示
+    description: 用途**：按钮 loading 状态
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_004
     type: icon
-    description: 规格**：24x24px，SVG 格式
+    description: 风格**：spinner / circular progress
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_005
     type: icon
-    description: 风格**：旋转动画的 spinner，与游戏主题匹配
+    description: 尺寸**：24px
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_006
     type: icon
-    description: 颜色**：单色（CSS 可控）
+    description: 格式**：SVG 或 CSS 动画
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_007
     type: icon
-    description: 文件名建议**：`icon-spinner.svg`
+    description: 颜色**：与按钮文字颜色一致
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_008
     type: icon
-    description: ### 2. 成功图标（可选增强）
+    description: ### 2. 错误图标
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_009
     type: icon
-    description: 用途**：游戏成功加载后的临时反馈
+    description: 用途**：错误提示组件
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_010
     type: icon
-    description: 规格**：24x24px，SVG 格式
+    description: 风格**：warning / alert triangle
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_011
     type: icon
-    description: 风格**：勾选标记（checkmark）
+    description: 尺寸**：32px
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_012
     type: icon
-    description: 文件名建议**：`icon-check.svg`
+    description: 格式**：SVG
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_013
     type: icon
-    description: ## 插画资产
+    description: 颜色**：错误红色（#E53E3E 或主题色）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_014
     type: icon
-    description: ### 1. 游戏标题背景（可选）
+    description: ### 3. 重试图标（可选）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_015
     type: icon
-    description: 用途**：开始界面背景装饰
+    description: 用途**：重试按钮
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_016
     type: icon
-    description: 描述**：平台跳跃游戏风格的像素艺术或简约场景
+    description: 风格**：refresh / reload
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_017
     type: icon
-    description: 尺寸**：1920x1080（全屏背景）
+    description: 尺寸**：20px
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_018
     type: icon
-    description: 格式**：PNG/WebP（支持透明度）
+    description: 格式**：SVG
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_019
     type: icon
-    description: 文件名建议**：`bg-start-screen.png`
+    description: 位置**：按钮文字左侧
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_020
     type: icon
-    description: ## 图片资产
+    description: ## 插画（Illustrations）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_021
     type: icon
-    description: ### 1. 游戏 Logo（可选）
+    description: ### 1. 背景装饰（可选）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_022
     type: icon
-    description: 用途**：替代纯文本标题
+    description: 用途**：开始界面背景元素
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_023
     type: icon
-    description: 尺寸**：建议 400x120（宽高比 10:3）
+    description: 描述**：平台跳跃游戏风格的简化场景（云朵、山峰、平台剪影）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_024
     type: icon
-    description: 格式**：PNG（透明背景）或 SVG
+    description: 尺寸**：全屏背景，响应式
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_025
     type: icon
-    description: 文件名建议**：`logo-platform-adventure.png`
+    description: 格式**：SVG 或 PNG
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_026
     type: icon
-    description: ## 字体资产
+    description: 风格**：扁平化、低饱和度（不抢主要内容焦点）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_027
     type: icon
-    description: ### 1. 游戏主字体
+    description: ## 图片（Images）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_028
     type: icon
-    description: 用途**：标题和按钮文本
+    description: ### 1. 游戏 Logo（可选）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_029
     type: icon
-    description: 风格建议**：像素字体（如 Press Start 2P）或游戏风格无衬线字体
+    description: 用途**：标题上方的品牌标识
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_030
     type: icon
-    description: 格式**：WOFF2（Web 优化）
+    description: 尺寸**：120x120px（移动端）/ 160x160px（桌面端）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_031
     type: icon
-    description: 备用方案**：系统字体 fallback（sans-serif）
+    description: 格式**：PNG 或 SVG
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_032
     type: icon
-    description: ## 音效资产（可选增强）
+    description: 要求**：透明背景
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_033
     type: icon
-    description: ### 1. 按钮点击音效
+    description: ## 动画资源
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_034
     type: icon
-    description: 用途**：Start Game 按钮点击反馈
+    description: ### 1. 按钮点击波纹效果
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_035
     type: icon
-    description: 时长**：< 0.5s
+    description: 类型**：CSS ripple effect 或 Lottie 动画
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_036
     type: icon
-    description: 格式**：MP3/OGG
+    description: 时长**：300ms
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_037
     type: icon
-    description: 文件名建议**：`sfx-button-click.mp3`
+    description: 触发**：按钮点击时
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_038
     type: icon
-    description: ## 本次修复所需资产
+    description: ### 2. 页面过渡动画
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_039
     type: icon
-    description: 最小化方案**（仅修复 BUG）：
+    description: 类型**：fade out（开始界面消失）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_040
     type: icon
-    description: ❌ 无需新增任何 UI 资产
+    description: 时长**：400ms
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_041
     type: icon
-    description: ✅ 仅需修复 JavaScript 事件绑定逻辑
+    description: 缓动**：ease-out
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_042
     type: icon
-    description: 增强方案**（改善用户体验）：
+    description: ## 字体（Fonts）
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_043
     type: icon
-    description: ✅ 加载图标（spinner）：显示游戏初始化进度
+    description: ### 1. 标题字体
     status: pending  # 待美术Agent确认来源和规格
   - id: asset_044
     type: icon
-    description: ✅ 按钮点击音效：增强交互反馈
+    description: 用途**："Platform Adventure" 标题
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_045
+    type: icon
+    description: 建议**：游戏风格字体（如 Press Start 2P / Orbitron）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_046
+    type: icon
+    description: 备选**：系统无衬线字体（Arial / Helvetica）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_047
+    type: icon
+    description: ### 2. 按钮字体
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_048
+    type: icon
+    description: 用途**：按钮文字
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_049
+    type: icon
+    description: 建议**：清晰易读的无衬线字体
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_050
+    type: icon
+    description: 粗细**：Medium / Semi-bold
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_051
+    type: icon
+    description: ## 颜色变量（仅供参考，非视觉设计）
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_052
+    type: icon
+    description: 主色（Primary）：按钮背景
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_053
+    type: icon
+    description: 错误色（Error）：#E53E3E
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_054
+    type: icon
+    description: 成功色（Success）：#38A169
+    status: pending  # 待美术Agent确认来源和规格
+  - id: asset_055
+    type: icon
+    description: 中性色（Neutral）：文字、边框
     status: pending  # 待美术Agent确认来源和规格
