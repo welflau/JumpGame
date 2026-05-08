@@ -12,6 +12,5 @@
 无
 
 ## 审查的代码
-- camera/Camera.js
 - index.html
 - docs/Reqs/6852a7/506558/dev-notes.md
