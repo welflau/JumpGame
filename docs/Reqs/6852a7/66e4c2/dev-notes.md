@@ -1,11 +1,11 @@
 # 开发笔记 — 实现物理引擎和碰撞检测系统
 
-> 2026-05-08 17:40 | LLM
+> 2026-05-08 17:42 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23433 chars)
+- [index.html](/app#repo?file=index.html) (23764 chars)
 
-## 自测: 自测 7/7 通过 ✅
+## 自测: 自测 6/6 通过 ✅
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|
@@ -15,7 +15,6 @@
 | 语法检查 | ✅ | 通过 |
 | 文件名规范 | ✅ | 全英文 |
 | 磁盘落地 | ✅ | 1 个文件已落盘 |
-| 页面截图 | ✅ | 1 张截图 |
 
 ## 代码变更 (Diff)
 
@@ -23,7 +22,7 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -558,6 +558,253 @@
+@@ -558,6 +558,319 @@
          this.vy = 0;
 
          this.patrolStart = patrolStart;
@@ -47,7 +46,7 @@
 
 +      update(dt) {
 
-+        // Patrol movement
++        // Patrol logic
 
 +        if (this.x <= this.patrolStart) {
 
@@ -87,40 +86,35 @@
 
 +        }
 
-+      }
-
 +
 
-+      draw() {
++        // Check collision with player
 
-+        ctx.save();
++        if (CollisionDetector.AABB(this, gameState.player)) {
 
-+        ctx.translate(this.x - gameState.cameraX, this.y);
++          const playerBottom = gameState.player.y + gameState.player.height;
 
-+
++          const enemyTop = this.y;
 
-+        // Body
++          
 
-+        ctx.fillStyle = '#e74c3c';
++          if (gameState.player.vy > 0 && playerBottom - enemyTop < 10) {
 
-+        ctx.fillRect(0, 8, 32, 24);
++            // Player jumped on enemy
 
-+
++            this.die();
 
-+        // Eyes
++            gameState.player.vy = CONFIG.PLAYER_JUMP * 0.6;
 
-+        ctx.fillStyle = '#fff';
++            gameState.score += CONFIG.ENEMY_KILL_SCORE;
 
-+        ctx.fillRect(6, 12, 8, 8);
++            updateHUD();
 
-+        ctx.fillRect(18, 12, 8, 8);
++          } else {
 
-+
++            // Enemy hit player
 
-... (共 259 行变更)
++            gameState.player.takeDamage(1);
+
+... (共 325 行变更)
 ```
-
-## 页面预览截图
-
-![开发自测 — 实现物理引擎和碰撞检测系统](screenshots/dev_1778233213.png)
-
