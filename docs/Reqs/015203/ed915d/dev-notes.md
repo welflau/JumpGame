@@ -1,9 +1,9 @@
 # 开发笔记 — [BUG] index.html 文件被截断导致游戏无法启动
 
-> 2026-05-08 20:16 | LLM
+> 2026-05-08 22:09 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23647 chars)
+- [index.html](/app#repo?file=index.html) (23470 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
@@ -22,7 +22,7 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -557,6 +557,271 @@
+@@ -557,6 +557,263 @@
        constructor(x, y, patrolStart, patrolEnd) {
 
          this.x = x;
@@ -33,7 +33,7 @@
 
 -
 
--/* ... [文件截断显示：原文 23324 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+-/* ... [文件截断显示：原文 23647 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
 +        this.width = 32;
 
 +        this.height = 32;
@@ -42,11 +42,11 @@
 
 +        this.vy = 0;
 
++        this.onGround = false;
+
 +        this.patrolStart = patrolStart;
 
 +        this.patrolEnd = patrolEnd;
-
-+        this.onGround = false;
 
 +        this.alive = true;
 
@@ -82,7 +82,7 @@
 
 +
 
-+        // Collision detection
++        // Collision with platforms
 
 +        CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
 
@@ -116,5 +116,5 @@
 
 +
 
-... (共 277 行变更)
+... (共 269 行变更)
 ```

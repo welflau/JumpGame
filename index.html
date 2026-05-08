@@ -561,9 +561,9 @@
         this.height = 32;
         this.vx = CONFIG.ENEMY_SPEED;
         this.vy = 0;
+        this.onGround = false;
         this.patrolStart = patrolStart;
         this.patrolEnd = patrolEnd;
-        this.onGround = false;
         this.alive = true;
         this.animFrame = 0;
         this.animTimer = 0;
@@ -581,7 +581,7 @@
         gameState.physicsEngine.applyGravity(this, dt);
         gameState.physicsEngine.updatePosition(this, dt);
 
-        // Collision detection
+        // Collision with platforms
         CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
 
         // Animation
@@ -604,22 +604,21 @@
 
         // Eyes
         ctx.fillStyle = '#fff';
-        ctx.fillRect(8, 12, 6, 6);
-        ctx.fillRect(18, 12, 6, 6);
+        ctx.fillRect(6, 12, 8, 8);
+        ctx.fillRect(18, 12, 8, 8);
 
         ctx.fillStyle = '#000';
         const eyeOffset = this.animFrame * 2;
-        ctx.fillRect(10 + eyeOffset, 14, 3, 3);
-        ctx.fillRect(20 + eyeOffset, 14, 3, 3);
+        ctx.fillRect(8 + eyeOffset, 14, 4, 4);
+        ctx.fillRect(20 + eyeOffset, 14, 4, 4);
 
         // Spikes
         ctx.fillStyle = '#c0392b';
         for (let i = 0; i < 4; i++) {
           ctx.beginPath();
           ctx.moveTo(i * 8 + 4, 8);
-          ctx.lineTo(i * 8, 0);
           ctx.lineTo(i * 8 + 8, 0);
-          ctx.closePath();
+          ctx.lineTo(i * 8 + 12, 8);
           ctx.fill();
         }
 
@@ -658,6 +657,7 @@
         ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + this.bobOffset);
         ctx.rotate(this.animFrame * Math.PI / 4);
 
+        // Coin
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
@@ -665,7 +665,7 @@
 
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.arc(0, 0, 7, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -701,55 +701,12 @@
         ctx.beginPath();
         ctx.moveTo(4, 0);
         for (let i = 0; i <= 40; i += 5) {
-          const wave = Math.sin(this.waveOffset + i / 10) * 3;
+          const wave = Math.sin(this.waveOffset + i / 5) * 3;
           ctx.lineTo(4 + i + wave, i);
         }
         ctx.lineTo(4, 40);
         ctx.closePath();
         ctx.fill();
-
-        ctx.restore();
-      }
-    }
-
-    // ============================================
-    // Platform Class
-    // ============================================
-    class Platform {
-      constructor(x, y, width, height, type = 'normal') {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.type = type;
-      }
-
-      draw() {
-        ctx.save();
-        ctx.translate(-gameState.cameraX, 0);
-
-        if (this.type === 'grass') {
-          // Grass platform
-          ctx.fillStyle = '#27ae60';
-          ctx.fillRect(this.x, this.y, this.width, 8);
-          ctx.fillStyle = '#7f8c8d';
-          ctx.fillRect(this.x, this.y + 8, this.width, this.height - 8);
-        } else if (this.type === 'stone') {
-          // Stone platform
-          ctx.fillStyle = '#95a5a6';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
-          ctx.strokeStyle = '#7f8c8d';
-          ctx.lineWidth = 2;
-          for (let i = 0; i < this.width; i += 32) {
-            for (let j = 0; j < this.height; j += 32) {
-              ctx.strokeRect(this.x + i, this.y + j, 32, 32);
-            }
-          }
-        } else {
-          // Normal platform
-          ctx.fillStyle = '#34495e';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
 
         ctx.restore();
       }
@@ -764,64 +721,99 @@
       gameState.coins = [];
       gameState.particleSystem = [];
 
-      if (levelNum === 1) {
-        // Ground
-        gameState.platforms.push(new Platform(0, 550, 800, 50, 'grass'));
-        gameState.platforms.push(new Platform(800, 550, 800, 50, 'grass'));
-        gameState.platforms.push(new Platform(1600, 550, 800, 50, 'grass'));
-        gameState.platforms.push(new Platform(2400, 550, 800, 50, 'grass'));
+      // Ground
+      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50, color: '#27ae60' });
 
+      if (levelNum === 1) {
         // Platforms
-        gameState.platforms.push(new Platform(300, 450, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(500, 350, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(700, 250, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(900, 450, 200, 20, 'stone'));
-        gameState.platforms.push(new Platform(1200, 400, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(1400, 300, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(1700, 450, 200, 20, 'stone'));
-        gameState.platforms.push(new Platform(2000, 350, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(2300, 450, 200, 20, 'stone'));
+        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 400, y: 350, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 600, y: 250, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 850, y: 350, width: 200, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1100, y: 450, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1300, y: 350, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1500, y: 450, width: 200, height: 20, color: '#2ecc71' });
 
         // Enemies
-        gameState.enemies.push(new Enemy(400, 400, 300, 450));
-        gameState.enemies.push(new Enemy(950, 400, 900, 1100));
-        gameState.enemies.push(new Enemy(1750, 400, 1700, 1900));
-        gameState.enemies.push(new Enemy(2350, 400, 2300, 2500));
+        gameState.enemies.push(new Enemy(400, 300, 400, 500));
+        gameState.enemies.push(new Enemy(900, 300, 850, 1000));
+        gameState.enemies.push(new Enemy(1500, 400, 1500, 1650));
 
         // Coins
         for (let i = 0; i < 15; i++) {
-          const x = 200 + i * 180;
-          const y = 200 + Math.sin(i) * 100;
+          const x = 250 + i * 100;
+          const y = 200 - (i % 3) * 50;
           gameState.coins.push(new Coin(x, y));
         }
 
         // Flag
-        gameState.flag = new Flag(2900, 470);
-        gameState.levelWidth = 3200;
-
+        gameState.flag = new Flag(1650, 470);
       } else if (levelNum === 2) {
-        // Ground with gaps
-        gameState.platforms.push(new Platform(0, 550, 600, 50, 'grass'));
-        gameState.platforms.push(new Platform(800, 550, 600, 50, 'grass'));
-        gameState.platforms.push(new Platform(1600, 550, 600, 50, 'grass'));
-        gameState.platforms.push(new Platform(2400, 550, 800, 50, 'grass'));
-
-        // More challenging platforms
-        gameState.platforms.push(new Platform(250, 450, 100, 20, 'stone'));
-        gameState.platforms.push(new Platform(400, 350, 100, 20, 'stone'));
-        gameState.platforms.push(new Platform(550, 250, 100, 20, 'stone'));
-        gameState.platforms.push(new Platform(650, 450, 100, 20, 'stone'));
-        gameState.platforms.push(new Platform(900, 400, 120, 20, 'stone'));
-        gameState.platforms.push(new Platform(1100, 300, 120, 20, 'stone'));
-        gameState.platforms.push(new Platform(1300, 400, 120, 20, 'stone'));
-        gameState.platforms.push(new Platform(1700, 450, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(1900, 350, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(2100, 450, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(2500, 400, 200, 20, 'stone'));
+        // More challenging level
+        gameState.platforms.push({ x: 150, y: 480, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 300, y: 400, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 450, y: 320, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 600, y: 240, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 750, y: 320, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 950, y: 400, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1100, y: 320, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1250, y: 240, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1450, y: 320, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1600, y: 400, width: 150, height: 20, color: '#2ecc71' });
 
         // More enemies
-        gameState.enemies.push(new Enemy(300, 400, 250, 350));
-        gameState.enemies.push(new Enemy(700, 400, 650, 750));
-        gameState.enemies.push(new Enemy(950, 350, 900, 1020));
-        gameState.enemies.push(new Enemy(1350, 350, 1300, 1420));
-        gameState.enemies.
+        gameState.enemies.push(new Enemy(300, 350, 300, 380));
+        gameState.enemies.push(new Enemy(600, 190, 600, 680));
+        gameState.enemies.push(new Enemy(950, 350, 950, 1030));
+        gameState.enemies.push(new Enemy(1250, 190, 1250, 1380));
+        gameState.enemies.push(new Enemy(1600, 350, 1600, 1730));
+
+        // More coins
+        for (let i = 0; i < 20; i++) {
+          const x = 200 + i * 80;
+          const y = 150 - (i % 4) * 40;
+          gameState.coins.push(new Coin(x, y));
+        }
+
+        // Flag
+        gameState.flag = new Flag(1700, 320);
+      } else {
+        // Level 3 and beyond - procedurally generated
+        let x = 150;
+        for (let i = 0; i < 12; i++) {
+          const y = 500 - Math.random() * 250;
+          const width = 80 + Math.random() * 100;
+          gameState.platforms.push({ x, y, width, height: 20, color: '#2ecc71' });
+
+          if (Math.random() > 0.5) {
+            gameState.enemies.push(new Enemy(x, y - 50, x, x + width - 32));
+          }
+
+          if (Math.random() > 0.3) {
+            gameState.coins.push(new Coin(x + width / 2 - 10, y - 80));
+          }
+
+          x += width + 100 + Math.random() * 100;
+        }
+
+        gameState.flag = new Flag(x - 100, 470);
+        gameState.levelWidth = x + 200;
+      }
+    }
+
+    // ============================================
+    // Camera System
+    // ============================================
+    function updateCamera() {
+      const player = gameState.player;
+      const targetX = player.x - CONFIG.CANVAS_WIDTH / 2 + player.width / 2;
+      
+      gameState.cameraX = Math.max(0, Math.min(targetX, gameState.levelWidth - CONFIG.CANVAS_WIDTH));
+    }
+
+    // ============================================
+    // Particle System
+    // ============================================
+    function updateParticles() {
+      for (let i = gameState.particleSystem.length - 1; i >= 0; i--) {
+        const p = gameState.particleSystem[i
