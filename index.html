@@ -551,62 +551,75 @@
         this.health -= amount;
         this.invincible = true;
         this.invincibleTimer = 90;
-        this.createHitParticles();
+        this.createDamageParticles();
+        updateHealthBar();
+        
         if (this.health <= 0) {
           gameOver();
         }
-        updateHUD();
       }
 
       respawn() {
         this.x = 100;
-        this.y = 300;
+        this.y = 100;
         this.vx = 0;
         this.vy = 0;
       }
 
       createJumpParticles() {
         for (let i = 0; i < 5; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height,
-            vx: (Math.random() - 0.5) * 3,
-            vy: Math.random() * 2,
-            life: 20,
-            color: '#aaa'
-          });
+          gameState.particleSystem.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height,
+            (Math.random() - 0.5) * 2,
+            Math.random() * 2,
+            '#ffffff',
+            20
+          ));
         }
       }
 
-      createHitParticles() {
-        for (let i = 0; i < 8; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 6,
-            vy: (Math.random() - 0.5) * 6,
-            life: 30,
-            color: '#e74c3c'
-          });
+      createDamageParticles() {
+        for (let i = 0; i < 10; i++) {
+          gameState.particleSystem.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4,
+            '#e74c3c',
+            30
+          ));
         }
       }
 
       draw(ctx) {
-        ctx.save();
-        
         if (this.invincible && Math.floor(gameState.frameCount / 5) % 2 === 0) {
-          ctx.globalAlpha = 0.5;
+          return;
         }
 
+        ctx.save();
+        
         if (!this.facingRight) {
           ctx.translate(this.x + this.width, this.y);
           ctx.scale(-1, 1);
-          ctx.fillStyle = '#3498db';
-          ctx.fillRect(0, 0, this.width, this.height);
         } else {
-          ctx.fillStyle = '#3498db';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
+          ctx.translate(this.x, this.y);
         }
+
+        // Body
+        ctx.fillStyle = '#3498db';
+        ctx.fillRect(0, 10, this.width, this.height - 10);
+        
+        // Head
+        ctx.fillStyle = '#f39c12';
+        ctx.beginPath();
+        ctx.arc(this.width / 2, 10, 10, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(this.width / 2 - 6, 8, 3, 3);
+        ctx.fillRect(this.width / 2 + 3, 8, 3, 3);
 
         ctx.restore();
       }
@@ -648,17 +661,19 @@
         CollisionDetector.checkPlatformCollisions(this, gameState.platforms);
 
         // Check collision with player
-        if (CollisionDetector.AABB(this, gameState.player)) {
+        if (this.alive && CollisionDetector.AABB(this, gameState.player)) {
           const playerBottom = gameState.player.y + gameState.player.height;
           const enemyTop = this.y;
           
           if (gameState.player.vy > 0 && playerBottom - enemyTop < 15) {
+            // Player jumped on enemy
             this.alive = false;
-            gameState.player.vy = CONFIG.PLAYER_JUMP * 0.5;
+            gameState.player.vy = CONFIG.PLAYER_JUMP * 0.6;
             gameState.score += CONFIG.ENEMY_KILL_SCORE;
-            updateHUD();
+            updateScore();
             this.createDeathParticles();
           } else {
+            // Enemy hit player
             gameState.player.takeDamage(1);
           }
         }
@@ -667,26 +682,32 @@
       }
 
       createDeathParticles() {
-        for (let i = 0; i < 10; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 25,
-            color: '#e74c3c'
-          });
+        for (let i = 0; i < 15; i++) {
+          gameState.particleSystem.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            (Math.random() - 0.5) * 6,
+            (Math.random() - 0.5) * 6,
+            '#e74c3c',
+            40
+          ));
         }
       }
 
       draw(ctx) {
         if (!this.alive) return;
+
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(this.x, this.y, this.width, this.height);
         
+        // Eyes
         ctx.fillStyle = '#fff';
-        ctx.fillRect(this.x + 8, this.y + 8, 6, 6);
-        ctx.fillRect(this.x + 18, this.y + 8, 6, 6);
+        ctx.fillRect(this.x + 8, this.y + 10, 6, 6);
+        ctx.fillRect(this.x + 18, this.y + 10, 6, 6);
+        
+        ctx.fillStyle = '#000';
+        ctx.fillRect(this.x + 10, this.y + 12, 3, 3);
+        ctx.fillRect(this.x + 20, this.y + 12, 3, 3);
       }
     }
 
@@ -701,92 +722,56 @@
         this.height = 20;
         this.collected = false;
         this.animation = new SpriteAnimation([0, 1, 2, 3], 8);
-        this.bobOffset = 0;
-        this.bobSpeed = 0.1;
+        this.floatOffset = Math.random() * Math.PI * 2;
       }
 
       update() {
         if (this.collected) return;
 
-        this.bobOffset += this.bobSpeed;
-        
+        this.animation.update();
+
+        // Check collision with player
         if (CollisionDetector.AABB(this, gameState.player)) {
           this.collected = true;
           gameState.score += CONFIG.COIN_VALUE;
-          updateHUD();
+          updateScore();
           this.createCollectParticles();
         }
-
-        this.animation.update();
       }
 
       createCollectParticles() {
-        for (let i = 0; i < 6; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            life: 20,
-            color: '#f39c12'
-          });
+        for (let i = 0; i < 8; i++) {
+          gameState.particleSystem.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            (Math.random() - 0.5) * 3,
+            (Math.random() - 0.5) * 3,
+            '#f1c40f',
+            25
+          ));
         }
       }
 
       draw(ctx) {
         if (this.collected) return;
-        
-        const drawY = this.y + Math.sin(this.bobOffset) * 5;
-        
-        ctx.fillStyle = '#f39c12';
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, drawY + this.height / 2, this.width / 2, 0, Math.PI * 2);
-        ctx.fill();
+
+        const floatY = this.y + Math.sin(gameState.frameCount * 0.05 + this.floatOffset) * 3;
+
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, floatY + this.height / 2);
+        ctx.rotate(gameState.frameCount * 0.02);
         
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, drawY + this.height / 2, this.width / 3, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
         ctx.fill();
-      }
-    }
-
-    // ============================================
-    // Flag Class
-    // ============================================
-    class Flag {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.width = 40;
-        this.height = 60;
-        this.reached = false;
-        this.waveOffset = 0;
-      }
-
-      update() {
-        this.waveOffset += 0.1;
         
-        if (!this.reached && CollisionDetector.AABB(this, gameState.player)) {
-          this.reached = true;
-          levelComplete();
-        }
-      }
-
-      draw(ctx) {
-        ctx.fillStyle = '#555';
-        ctx.fillRect(this.x, this.y, 4, this.height);
-        
-        ctx.fillStyle = '#2ecc71';
+        ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.moveTo(this.x + 4, this.y);
-        for (let i = 0; i <= 10; i++) {
-          const waveX = this.x + 4 + (this.width - 4) * (i / 10);
-          const waveY = this.y + (this.height * 0.6) * (i / 10) + Math.sin(this.waveOffset + i * 0.5) * 3;
-          ctx.lineTo(waveX, waveY);
-        }
-        ctx.lineTo(this.x + 4, this.y + this.height * 0.6);
-        ctx.closePath();
+        ctx.arc(0, 0, this.width / 3, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.restore();
       }
     }
 
@@ -822,6 +807,7 @@
         ctx.fillStyle = gradient;
         ctx.fillRect(this.x, this.y, this.width, this.height);
         
+        // Border
         ctx.strokeStyle = 'rgba(0,0,0,0.3)';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
@@ -829,46 +815,74 @@
     }
 
     // ============================================
-    // Particle System
+    // Flag Class
     // ============================================
-    function updateParticles() {
-      for (let i = gameState.particleSystem.length - 1; i >= 0; i--) {
-        const particle = gameState.particleSystem[i];
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.life--;
+    class Flag {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 60;
+        this.reached = false;
+      }
+
+      update() {
+        if (this.reached) return;
+
+        if (CollisionDetector.AABB(this, gameState.player)) {
+          this.reached = true;
+          levelComplete();
+        }
+      }
+
+      draw(ctx) {
+        // Pole
+        ctx.fillStyle = '#7f8c8d';
+        ctx.fillRect(this.x + 5, this.y, 4, this.height);
         
-        if (particle.life <= 0) {
-          gameState.particleSystem.splice(i, 1);
+        // Flag
+        ctx.fillStyle = this.reached ? '#2ecc71' : '#e74c3c';
+        ctx.beginPath();
+        ctx.moveTo(this.x + 9, this.y + 5);
+        ctx.lineTo(this.x + 35, this.y + 15);
+        ctx.lineTo(this.x + 9, this.y + 25);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Wave effect
+        if (!this.reached) {
+          ctx.fillStyle = 'rgba(231, 76, 60, 0.5)';
+          const wave = Math.sin(gameState.frameCount * 0.1) * 3;
+          ctx.beginPath();
+          ctx.moveTo(this.x + 9, this.y + 5);
+          ctx.lineTo(this.x + 35 + wave, this.y + 15);
+          ctx.lineTo(this.x + 9, this.y + 25);
+          ctx.closePath();
+          ctx.fill();
         }
       }
     }
 
-    function drawParticles(ctx) {
-      for (const particle of gameState.particleSystem) {
-        ctx.fillStyle = particle.color;
-        ctx.globalAlpha = particle.life / 30;
-        ctx.fillRect(particle.x - 2, particle.y - 2, 4, 4);
+    // ============================================
+    // Particle Class
+    // ============================================
+    class Particle {
+      constructor(x, y, vx, vy, color, life) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.life = life;
+        this.maxLife = life;
+        this.size = Math.random() * 4 + 2;
       }
-      ctx.globalAlpha = 1;
-    }
 
-    // ============================================
-    // Level Generation
-    // ============================================
-    function generateLevel(levelNumber) {
-      gameState.platforms = [];
-      gameState.enemies = [];
-      gameState.coins = [];
-      gameState.particleSystem = [];
+      update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vy += 0.2 * dt;
+        this.life--;
+      }
 
-      const levelConfigs = {
-        1: {
-          platforms: [
-            new Platform(0, 550, 800, 50, 'grass'),
-            new Platform(200, 450, 200, 20, 'grass'),
-            new Platform(500, 350, 200, 20, 'grass'),
-            new Platform(800, 450, 200, 20, 'stone'),
-            new Platform(1100, 350, 200, 20, 'stone'),
-            new Platform(1400, 450, 300, 20, 'grass'),
-            new Platform(1
+      draw(ctx) {
