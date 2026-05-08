@@ -1,54 +1,28 @@
 # 开发笔记 — [BUG] Start Game 按钮点击无响应 - 事件监听器未绑定
 
-> 2026-05-08 22:28 | LLM
+> 2026-05-08 22:31 | LLM
 
 ## 产出文件
-- [game.js](/app#repo?file=game.js) (20582 chars)
-- [index.html](/app#repo?file=index.html) (23266 chars)
+- [index.html](/app#repo?file=index.html) (23399 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|
-| 文件产出 | ✅ | 2 个文件 |
+| 文件产出 | ✅ | 1 个文件 |
 | 入口文件 | ✅ | 存在 |
 | 代码非空 | ✅ | 通过 |
 | 语法检查 | ✅ | 通过 |
 | 文件名规范 | ✅ | 全英文 |
-| 磁盘落地 | ✅ | 2 个文件已落盘 |
+| 磁盘落地 | ✅ | 1 个文件已落盘 |
 
 ## 代码变更 (Diff)
-
-### game.js (新建, 20582 chars)
-```
-+ // ============================================
-+ // Game Configuration & Constants
-+ // ============================================
-+ const CONFIG = {
-+   CANVAS_WIDTH: 800,
-+   CANVAS_HEIGHT: 600,
-+   GRAVITY: 0.6,
-+   PLAYER_SPEED: 4.5,
-+   PLAYER_JUMP: -12,
-+   PLAYER_MAX_HEALTH: 3,
-+   ENEMY_SPEED: 1.8,
-+   COIN_VALUE: 10,
-+   ENEMY_KILL_SCORE: 50,
-+   TARGET_FPS: 60,
-+   COYOTE_TIME: 6,
-+   JUMP_BUFFER: 8
-+ };
-+ 
-+ // ============================================
-+ // Physics Engine
-+ ... (更多)
-```
 
 ### index.html (修改)
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -557,6 +557,246 @@
+@@ -557,6 +557,255 @@
        constructor(x, y, patrolStart, patrolEnd) {
 
          this.x = x;
@@ -59,7 +33,7 @@
 
 -
 
--/* ... [文件截断显示：原文 23395 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+-/* ... [文件截断显示：原文 23266 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
 +        this.width = 32;
 
 +        this.height = 32;
@@ -116,7 +90,7 @@
 
 +        this.animTimer++;
 
-+        if (this.animTimer > 15) {
++        if (this.animTimer > 10) {
 
 +          this.animFrame = (this.animFrame + 1) % 2;
 
@@ -142,5 +116,5 @@
 
 +        ctx.fillRect(0, 8, 32, 24);
 
-... (共 252 行变更)
+... (共 261 行变更)
 ```
