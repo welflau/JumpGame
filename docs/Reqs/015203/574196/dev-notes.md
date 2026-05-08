@@ -1,9 +1,9 @@
 # 开发笔记 — [BUG] Start Game 按钮点击无响应
 
-> 2026-05-08 18:44 | LLM
+> 2026-05-08 18:47 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23268 chars)
+- [index.html](/app#repo?file=index.html) (23192 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
@@ -22,7 +22,7 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -557,6 +557,234 @@
+@@ -557,6 +557,239 @@
        constructor(x, y, patrolStart, patrolEnd) {
 
          this.x = x;
@@ -33,7 +33,7 @@
 
 -
 
--/* ... [文件截断显示：原文 23324 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+-/* ... [文件截断显示：原文 23268 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
 +        this.width = 32;
 
 +        this.height = 32;
@@ -42,13 +42,13 @@
 
 +        this.vy = 0;
 
-+        this.onGround = false;
-
 +        this.patrolStart = patrolStart;
 
 +        this.patrolEnd = patrolEnd;
 
-+        this.direction = 1;
++        this.onGround = false;
+
++        this.alive = true;
 
 +        this.animFrame = 0;
 
@@ -60,17 +60,13 @@
 
 +      update(dt) {
 
-+        // Patrol logic
++        // Patrol behavior
 
 +        if (this.x <= this.patrolStart) {
-
-+          this.direction = 1;
 
 +          this.vx = CONFIG.ENEMY_SPEED;
 
 +        } else if (this.x >= this.patrolEnd) {
-
-+          this.direction = -1;
 
 +          this.vx = -CONFIG.ENEMY_SPEED;
 
@@ -82,9 +78,7 @@
 
 +        gameState.physicsEngine.applyGravity(this, dt);
 
-+        this.x += this.vx * dt;
-
-+        this.y += this.vy * dt;
++        gameState.physicsEngine.updatePosition(this, dt);
 
 +
 
@@ -112,9 +106,15 @@
 
 +      draw() {
 
++        if (!this.alive) return;
+
++
+
 +        ctx.save();
 
 +        ctx.translate(this.x - gameState.cameraX, this.y);
 
-... (共 240 行变更)
++
+
+... (共 245 行变更)
 ```
