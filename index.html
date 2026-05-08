@@ -575,10 +575,11 @@
         ctx.fillStyle = '#fff';
         ctx.fillRect(6 + this.animFrame * 2, 12, 6, 6);
         ctx.fillRect(20 + this.animFrame * 2, 12, 6, 6);
+        
         ctx.fillStyle = '#000';
         ctx.fillRect(8 + this.animFrame * 2, 14, 3, 3);
         ctx.fillRect(22 + this.animFrame * 2, 14, 3, 3);
-        
+
         ctx.restore();
       }
     }
@@ -590,21 +591,27 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 20;
-        this.height = 20;
+        this.width = 24;
+        this.height = 24;
         this.collected = false;
-        this.rotation = 0;
-        this.bobOffset = 0;
+        this.animFrame = 0;
+        this.animTimer = 0;
       }
 
-      update(dt) {
+      update() {
         if (this.collected) return;
 
-        this.rotation += 0.05 * dt;
-        this.bobOffset = Math.sin(gameState.frameCount * 0.05) * 3;
-
         if (this.intersects(gameState.player)) {
-          this.collect();
+          this.collected = true;
+          gameState.score += CONFIG.COIN_VALUE;
+          updateHUD();
+          this.createCollectParticles();
+        }
+
+        this.animTimer++;
+        if (this.animTimer > 10) {
+          this.animFrame = (this.animFrame + 1) % 4;
+          this.animTimer = 0;
         }
       }
 
@@ -615,10 +622,7 @@
                this.y + this.height > rect.y;
       }
 
-      collect() {
-        this.collected = true;
-        gameState.score += CONFIG.COIN_VALUE;
-        updateHUD();
+      createCollectParticles() {
         for (let i = 0; i < 6; i++) {
           gameState.particleSystem.push({
             x: this.x + this.width / 2,
@@ -634,106 +638,100 @@
       draw() {
         if (this.collected) return;
         ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.bobOffset + this.height / 2);
-        ctx.rotate(this.rotation);
+        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2);
+        ctx.rotate(this.animFrame * Math.PI / 8);
+        
         ctx.fillStyle = '#f1c40f';
-        ctx.fillRect(-10, -10, 20, 20);
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+        
         ctx.fillStyle = '#f39c12';
-        ctx.fillRect(-6, -6, 12, 12);
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
       }
     }
 
     // ============================================
-    // Level Generation
+    // Platform Class
     // ============================================
-    function generateLevel(levelNum) {
-      gameState.platforms = [];
-      gameState.enemies = [];
-      gameState.coins = [];
-      gameState.particleSystem = [];
+    class Platform {
+      constructor(x, y, width, height, type = 'normal') {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.type = type;
+      }
 
-      const difficulty = Math.min(levelNum, 5);
-      const enemyCount = 3 + difficulty * 2;
-      const coinCount = 15 + difficulty * 3;
-
-      // Ground
-      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50, color: '#27ae60' });
-
-      // Starting platform
-      gameState.platforms.push({ x: 50, y: 450, width: 200, height: 20, color: '#2ecc71' });
-
-      // Generate platforms
-      let currentX = 300;
-      while (currentX < gameState.levelWidth - 400) {
-        const width = 80 + Math.random() * 120;
-        const height = 15 + Math.random() * 10;
-        const y = 250 + Math.random() * 200;
+      draw() {
+        ctx.fillStyle = this.type === 'ground' ? '#34495e' : '#7f8c8d';
+        ctx.fillRect(this.x - gameState.cameraX, this.y, this.width, this.height);
         
-        gameState.platforms.push({
-          x: currentX,
-          y: y,
-          width: width,
-          height: height,
-          color: '#2ecc71'
-        });
-
-        // Add coins on platform
-        if (Math.random() > 0.3) {
-          const numCoins = 2 + Math.floor(Math.random() * 3);
-          for (let i = 0; i < numCoins; i++) {
-            gameState.coins.push(new Coin(
-              currentX + (width / (numCoins + 1)) * (i + 1) - 10,
-              y - 30
-            ));
-          }
+        // Add texture
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        for (let i = 0; i < this.width; i += 32) {
+          ctx.fillRect(this.x - gameState.cameraX + i, this.y, 2, this.height);
         }
-
-        // Add enemy on platform
-        if (Math.random() > 0.5 && gameState.enemies.length < enemyCount) {
-          gameState.enemies.push(new Enemy(
-            currentX + width / 2,
-            y - 40,
-            currentX,
-            currentX + width
-          ));
-        }
-
-        currentX += width + 100 + Math.random() * 200;
       }
-
-      // Add floating coins
-      for (let i = gameState.coins.length; i < coinCount; i++) {
-        gameState.coins.push(new Coin(
-          200 + Math.random() * (gameState.levelWidth - 600),
-          150 + Math.random() * 250
-        ));
-      }
-
-      // Flag at end
-      gameState.flag = {
-        x: gameState.levelWidth - 150,
-        y: 450,
-        width: 40,
-        height: 100
-      };
-
-      // End platform
-      gameState.platforms.push({
-        x: gameState.levelWidth - 200,
-        y: 500,
-        width: 200,
-        height: 20,
-        color: '#2ecc71'
-      });
     }
 
     // ============================================
-    // Camera System
+    // Flag Class
     // ============================================
-    function updateCamera() {
-      const targetX = gameState.player.x - CONFIG.CANVAS_WIDTH / 3;
-      gameState.cameraX = Math.max(0, Math.min(targetX, gameState.levelWidth - CONFIG.CANVAS_WIDTH));
+    class Flag {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 60;
+        this.reached = false;
+        this.waveOffset = 0;
+      }
+
+      update() {
+        if (this.reached) return;
+
+        if (this.intersects(gameState.player)) {
+          this.reached = true;
+          levelComplete();
+        }
+
+        this.waveOffset += 0.1;
+      }
+
+      intersects(rect) {
+        return this.x < rect.x + rect.width &&
+               this.x + this.width > rect.x &&
+               this.y < rect.y + rect.height &&
+               this.y + this.height > rect.y;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x - gameState.cameraX, this.y);
+        
+        // Pole
+        ctx.fillStyle = '#95a5a6';
+        ctx.fillRect(0, 0, 4, 60);
+        
+        // Flag
+        ctx.fillStyle = '#2ecc71';
+        ctx.beginPath();
+        ctx.moveTo(4, 0);
+        for (let i = 0; i <= 30; i += 2) {
+          const wave = Math.sin(this.waveOffset + i * 0.2) * 2;
+          ctx.lineTo(4 + 30 + wave, i);
+        }
+        ctx.lineTo(4, 30);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
     }
 
     // ============================================
@@ -746,6 +744,7 @@
         p.y += p.vy * dt;
         p.vy += 0.2 * dt;
         p.life--;
+        
         if (p.life <= 0) {
           gameState.particleSystem.splice(i, 1);
         }
@@ -762,249 +761,71 @@
     }
 
     // ============================================
-    // Rendering
+    // Level Generation
     // ============================================
-    function drawBackground() {
-      const gradient = ctx.createLinearGradient(0, 0, 0, CONFIG.CANVAS_HEIGHT);
-      gradient.addColorStop(0, '#1a1a2e');
-      gradient.addColorStop(1, '#16213e');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    function generateLevel(levelNum) {
+      gameState.platforms = [];
+      gameState.enemies = [];
+      gameState.coins = [];
+      gameState.particleSystem = [];
 
-      // Stars
-      ctx.fillStyle = '#fff';
-      for (let i = 0; i < 50; i++) {
-        const x = (i * 157 % gameState.levelWidth) - gameState.cameraX * 0.5;
-        const y = (i * 211 % CONFIG.CANVAS_HEIGHT);
-        if (x >= -10 && x <= CONFIG.CANVAS_WIDTH + 10) {
-          ctx.fillRect(x, y, 2, 2);
-        }
-      }
-    }
-
-    function drawPlatforms() {
-      for (const platform of gameState.platforms) {
-        if (platform.x + platform.width < gameState.cameraX || 
-            platform.x > gameState.cameraX + CONFIG.CANVAS_WIDTH) continue;
-
-        ctx.fillStyle = platform.color;
-        ctx.fillRect(
-          platform.x - gameState.cameraX,
-          platform.y,
-          platform.width,
-          platform.height
-        );
+      if (levelNum === 1) {
+        // Ground
+        gameState.platforms.push(new Platform(0, 550, 800, 50, 'ground'));
+        gameState.platforms.push(new Platform(800, 550, 800, 50, 'ground'));
+        gameState.platforms.push(new Platform(1600, 550, 800, 50, 'ground'));
+        gameState.platforms.push(new Platform(2400, 550, 800, 50, 'ground'));
         
-        // Grass texture
-        ctx.fillStyle = '#229954';
-        for (let i = 0; i < platform.width; i += 8) {
-          ctx.fillRect(platform.x - gameState.cameraX + i, platform.y - 2, 2, 2);
+        // Platforms
+        gameState.platforms.push(new Platform(300, 450, 150, 20));
+        gameState.platforms.push(new Platform(550, 380, 120, 20));
+        gameState.platforms.push(new Platform(800, 480, 200, 20));
+        gameState.platforms.push(new Platform(1100, 420, 150, 20));
+        gameState.platforms.push(new Platform(1350, 350, 120, 20));
+        gameState.platforms.push(new Platform(1600, 450, 180, 20));
+        gameState.platforms.push(new Platform(1900, 380, 150, 20));
+        gameState.platforms.push(new Platform(2200, 480, 200, 20));
+        gameState.platforms.push(new Platform(2500, 420, 150, 20));
+        gameState.platforms.push(new Platform(2800, 350, 200, 20));
+        
+        // Enemies
+        gameState.enemies.push(new Enemy(500, 500, 400, 650));
+        gameState.enemies.push(new Enemy(1000, 500, 850, 1200));
+        gameState.enemies.push(new Enemy(1700, 500, 1600, 1900));
+        gameState.enemies.push(new Enemy(2300, 500, 2200, 2500));
+        
+        // Coins
+        for (let i = 0; i < 15; i++) {
+          const x = 400 + i * 180;
+          const y = 300 - Math.sin(i * 0.5) * 80;
+          gameState.coins.push(new Coin(x, y));
         }
-      }
-    }
-
-    function drawFlag() {
-      if (!gameState.flag) return;
-      const flag = gameState.flag;
-      
-      // Pole
-      ctx.fillStyle = '#95a5a6';
-      ctx.fillRect(flag.x - gameState.cameraX, flag.y, 4, flag.height);
-      
-      // Flag
-      ctx.fillStyle = '#e74c3c';
-      const wave = Math.sin(gameState.frameCount * 0.1) * 3;
-      ctx.beginPath();
-      ctx.moveTo(flag.x - gameState.cameraX + 4, flag.y);
-      ctx.lineTo(flag.x - gameState.cameraX + 34 + wave, flag.y + 15);
-      ctx.lineTo(flag.x - gameState.cameraX + 4, flag.y + 30);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // ============================================
-    // Game Loop
-    // ============================================
-    function gameLoop(timestamp) {
-      if (!gameState.running || gameState.paused) {
-        requestAnimationFrame(gameLoop);
-        return;
-      }
-
-      // Calculate delta time
-      const deltaTime = timestamp - gameState.lastFrameTime;
-      gameState.lastFrameTime = timestamp;
-      gameState.deltaTime = Math.min(deltaTime / (1000 / CONFIG.TARGET_FPS), 2);
-
-      // FPS calculation
-      if (gameState.frameCount % 30 === 0) {
-        gameState.fps = Math.round(1000 / deltaTime);
-        document.getElementById('fps-counter').textContent = `FPS: ${gameState.fps}`;
-      }
-
-      // Update
-      gameState.player.update(gameState.deltaTime);
-      
-      for (const enemy of gameState.enemies) {
-        enemy.update(gameState.deltaTime);
-      }
-      
-      for (const coin of gameState.coins) {
-        coin.update(gameState.deltaTime);
-      }
-      
-      updateParticles(gameState.deltaTime);
-      updateCamera();
-
-      // Check flag collision
-      if (gameState.flag && 
-          gameState.player.x + gameState.player.width > gameState.flag.x &&
-          gameState.player.x < gameState.flag.x + gameState.flag.width &&
-          gameState.player.y + gameState.player.height > gameState.flag.y) {
-        levelComplete();
-      }
-
-      // Render
-      drawBackground();
-      drawPlatforms();
-      drawFlag();
-      
-      for (const coin of gameState.coins) {
-        coin.draw();
-      }
-      
-      for (const enemy of gameState.enemies) {
-        enemy.draw();
-      }
-      
-      gameState.player.draw();
-      drawParticles();
-
-      gameState.frameCount++;
-      requestAnimationFrame(gameLoop);
-    }
-
-    // ============================================
-    // Game State Functions
-    // ============================================
-    function startGame() {
-      document.getElementById('start-screen').classList.add('hidden');
-      gameState.running = true;
-      gameState.paused = false;
-      gameState.currentLevel = 1;
-      gameState.score = 0;
-      gameState.player = new Player(100, 300);
-      gameState.cameraX = 0;
-      generateLevel(1);
-      updateHUD();
-      gameState.lastFrameTime = performance.now();
-      requestAnimationFrame(gameLoop);
-    }
-
-    function levelComplete() {
-      gameState.paused = true;
-      const coinsCollected = gameState.coins.filter(c => c.collected).length;
-      const totalCoins = gameState.coins.length;
-      const enemiesDefeated = gameState.enemies.filter(e => !e.alive).length;
-      
-      document.getElementById('victory-stats').innerHTML = `
-        <p>Level ${gameState.currentLevel} Complete!</p>
-        <p>Score: ${gameState.score}</p>
-        <p>Coins: ${coinsCollected}/${totalCoins}</p>
-        <p>Enemies Defeated: ${enemiesDefeated}</p>
-      `;
-      document.getElementById('victory-screen').classList.remove('hidden');
-    }
-
-    function nextLevel() {
-      document.getElementById('victory-screen').classList.add('hidden');
-      gameState.currentLevel++;
-      gameState.player.health = CONFIG.PLAYER_MAX_HEALTH;
-      gameState.player.x = 100;
-      gameState.player.y = 300;
-      gameState.player.vx = 0;
-      gameState.player.vy = 0;
-      gameState.cameraX = 0;
-      generateLevel(gameState.currentLevel);
-      updateHUD();
-      gameState.paused = false;
-    }
-
-    function gameOver() {
-      gameState.running = false;
-      const coinsCollected = gameState.coins.filter(c => c.collected).length;
-      const totalCoins = gameState.coins.length;
-      
-      document.getElementById('stats').innerHTML = `
-        <p>Final Score: ${gameState.score}</p>
-        <p>Level Reached: ${gameState.currentLevel}</p>
-        <p>Coins Collected: ${coinsCollected}/${totalCoins}</p>
-      `;
-      document.getElementById('game-over-screen').classList.remove('hidden');
-    }
-
-    function restartGame() {
-      document.getElementById('game-over-screen').classList.add('hidden');
-      startGame();
-    }
-
-    function returnToMenu() {
-      document.getElementById('victory-screen').classList.add('hidden');
-      document.getElementById('start-screen').classList.remove('hidden');
-      gameState.running = false;
-      gameState.paused = false;
-    }
-
-    function updateHUD() {
-      // Health
-      const healthBar = document.getElementById('health-bar');
-      healthBar.innerHTML = '';
-      for (let i = 0; i < CONFIG.PLAYER_MAX_HEALTH; i++) {
-        const heart = document.createElement('div');
-        heart.className = 'heart' + (i >= gameState.player.health ? ' empty' : '');
-        healthBar.appendChild(heart);
-      }
-      
-      // Score and level
-      document.getElementById('score').textContent = `Score: ${gameState.score}`;
-      document.getElementById('level').textContent = `Level: ${gameState.currentLevel}`;
-    }
-
-    // ============================================
-    // Input Handling
-    // ============================================
-    document.addEventListener('keydown', (e) => {
-      gameState.keys[e.key] = true;
-      
-      if (e.key === 'Escape') {
-        if (gameState.running && !document.getElementById('victory-screen').classList.contains('hidden')) {
-          return;
-        }
-        gameState.paused = !gameState.paused;
-      }
-      
-      // Prevent arrow key scrolling
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-        e.preventDefault();
-      }
-    });
-
-    document.addEventListener('keyup', (e) => {
-      gameState.keys[e.key] = false;
-    });
-
-    // ============================================
-    // UI Event Listeners
-    // ============================================
-    document.getElementById('start-btn').addEventListener('click', startGame);
-    document.getElementById('restart-btn').addEventListener('click', restartGame);
-    document.getElementById('next-level-btn').addEventListener('click', nextLevel);
-    document.getElementById('menu-btn').addEventListener('click', returnToMenu);
-
-    // ============================================
-    // Initialize
-    // ============================================
-    updateHUD();
-  </script>
-</body>
-</html>
+        
+        gameState.flag = new Flag(3000, 490);
+        gameState.levelWidth = 3200;
+      } else if (levelNum === 2) {
+        // Ground
+        gameState.platforms.push(new Platform(0, 550, 600, 50, 'ground'));
+        gameState.platforms.push(new Platform(800, 550, 600, 50, 'ground'));
+        gameState.platforms.push(new Platform(1600, 550, 600, 50, 'ground'));
+        gameState.platforms.push(new Platform(2400, 550, 1000, 50, 'ground'));
+        
+        // More challenging platforms
+        gameState.platforms.push(new Platform(250, 450, 100, 20));
+        gameState.platforms.push(new Platform(450, 380, 80, 20));
+        gameState.platforms.push(new Platform(600, 320, 100, 20));
+        gameState.platforms.push(new Platform(850, 450, 120, 20));
+        gameState.platforms.push(new Platform(1050, 380, 100, 20));
+        gameState.platforms.push(new Platform(1250, 320, 80, 20));
+        gameState.platforms.push(new Platform(1400, 260, 100, 20));
+        gameState.platforms.push(new Platform(1650, 450, 150, 20));
+        gameState.platforms.push(new Platform(1900, 380, 100, 20));
+        gameState.platforms.push(new Platform(2100, 320, 120, 20));
+        gameState.platforms.push(new Platform(2350, 450, 100, 20));
+        gameState.platforms.push(new Platform(2550, 380, 150, 20));
+        gameState.platforms.push(new Platform(2800, 320, 120, 20));
+        gameState.platforms.push(new Platform(3050, 450, 200, 20));
+        
+        // More enemies
+        gameState.enemies.push(new Enemy(300, 500, 200, 500));
+        gameState.enemies.push(new Enemy(700, 500
