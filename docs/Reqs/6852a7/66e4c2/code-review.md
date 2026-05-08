@@ -12,10 +12,5 @@
 无
 
 ## 审查的代码
-- physics/Vector2D.js
-- physics/AABB.js
-- physics/PhysicsEngine.js
-- entities/Entity.js
-- physics/CollisionResolver.js
 - index.html
 - docs/Reqs/6852a7/66e4c2/dev-notes.md
