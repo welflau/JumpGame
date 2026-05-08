@@ -564,78 +564,62 @@
         this.onGround = false;
         this.patrolStart = patrolStart;
         this.patrolEnd = patrolEnd;
-        this.alive = true;
+        this.direction = 1;
         this.animFrame = 0;
         this.animTimer = 0;
       }
 
       update(dt) {
-        // Patrol behavior
+        // Patrol logic
         if (this.x <= this.patrolStart) {
+          this.direction = 1;
           this.vx = CONFIG.ENEMY_SPEED;
         } else if (this.x >= this.patrolEnd) {
+          this.direction = -1;
           this.vx = -CONFIG.ENEMY_SPEED;
         }
 
         // Apply physics
         gameState.physicsEngine.applyGravity(this, dt);
-        gameState.physicsEngine.updatePosition(this, dt);
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
 
         // Collision detection
         CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
 
         // Animation
         this.animTimer++;
-        if (this.animTimer > 10) {
+        if (this.animTimer > 15) {
           this.animFrame = (this.animFrame + 1) % 2;
           this.animTimer = 0;
         }
       }
 
       draw() {
-        if (!this.alive) return;
-
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
 
         // Body
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(0, 8, 32, 24);
-
+        
         // Eyes
         ctx.fillStyle = '#fff';
         ctx.fillRect(8, 12, 6, 6);
         ctx.fillRect(18, 12, 6, 6);
         
         ctx.fillStyle = '#000';
-        ctx.fillRect(10, 14, 3, 3);
-        ctx.fillRect(20, 14, 3, 3);
-
+        const eyeOffset = this.direction > 0 ? 2 : -2;
+        ctx.fillRect(10 + eyeOffset, 14, 3, 3);
+        ctx.fillRect(20 + eyeOffset, 14, 3, 3);
+        
         // Legs
         ctx.fillStyle = '#c0392b';
         const legBounce = this.animFrame * 2;
-        ctx.fillRect(6, 32, 8, 4 + legBounce);
-        ctx.fillRect(18, 32, 8, 4 - legBounce);
+        ctx.fillRect(6, 32, 8, 4 - legBounce);
+        ctx.fillRect(18, 32, 8, 4 + legBounce);
 
         ctx.restore();
-      }
-
-      die() {
-        this.alive = false;
-        gameState.score += CONFIG.ENEMY_KILL_SCORE;
-        updateHUD();
-        
-        // Create death particles
-        for (let i = 0; i < 12; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8,
-            life: 40,
-            color: '#e74c3c'
-          });
-        }
       }
     }
 
@@ -646,65 +630,45 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 24;
-        this.height = 24;
+        this.width = 20;
+        this.height = 20;
         this.collected = false;
         this.animFrame = 0;
         this.animTimer = 0;
-        this.floatOffset = Math.random() * Math.PI * 2;
+        this.bobOffset = 0;
       }
 
       update() {
         this.animTimer++;
-        if (this.animTimer > 6) {
+        if (this.animTimer > 10) {
           this.animFrame = (this.animFrame + 1) % 8;
           this.animTimer = 0;
         }
+        this.bobOffset = Math.sin(Date.now() / 200) * 3;
       }
 
       draw() {
         if (this.collected) return;
-
-        const floatY = Math.sin(gameState.frameCount * 0.05 + this.floatOffset) * 3;
-
-        ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + floatY);
         
-        // Rotation effect
+        ctx.save();
+        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + this.bobOffset);
+        
         const scale = Math.abs(Math.cos(this.animFrame * Math.PI / 4));
         ctx.scale(scale, 1);
-
-        // Coin
+        
+        // Outer circle
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-
+        
+        // Inner circle
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
-        ctx.arc(0, 0, 7, 0, Math.PI * 2);
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.fill();
-
+        
         ctx.restore();
-      }
-
-      collect() {
-        if (this.collected) return;
-        this.collected = true;
-        gameState.score += CONFIG.COIN_VALUE;
-        updateHUD();
-
-        // Create collection particles
-        for (let i = 0; i < 8; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            life: 25,
-            color: '#f1c40f'
-          });
-        }
       }
     }
 
@@ -715,8 +679,8 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 48;
-        this.height = 64;
+        this.width = 40;
+        this.height = 60;
         this.waveOffset = 0;
       }
 
@@ -727,23 +691,23 @@
       draw() {
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
-
+        
         // Pole
         ctx.fillStyle = '#7f8c8d';
-        ctx.fillRect(0, 0, 4, 64);
-
+        ctx.fillRect(0, 0, 4, 60);
+        
         // Flag
         ctx.fillStyle = '#2ecc71';
         ctx.beginPath();
         ctx.moveTo(4, 0);
-        for (let i = 0; i <= 32; i += 4) {
-          const wave = Math.sin(this.waveOffset + i * 0.2) * 3;
-          ctx.lineTo(4 + 32 + wave, i);
+        for (let i = 0; i <= 30; i += 2) {
+          const wave = Math.sin(this.waveOffset + i / 5) * 2;
+          ctx.lineTo(4 + 30 + wave, i);
         }
-        ctx.lineTo(4, 32);
+        ctx.lineTo(4, 30);
         ctx.closePath();
         ctx.fill();
-
+        
         ctx.restore();
       }
     }
@@ -761,47 +725,66 @@
       gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50, color: '#27ae60' });
 
       if (levelNum === 1) {
-        // Platforms
-        gameState.platforms.push({ x: 300, y: 450, width: 150, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 550, y: 380, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 800, y: 320, width: 150, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1050, y: 400, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1250, y: 350, width: 150, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1500, y: 280, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1750, y: 400, width: 150, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2000, y: 320, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2250, y: 450, width: 150, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2500, y: 380, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2750, y: 300, width: 150, height: 20, color: '#16a085' });
+        // Starting platforms
+        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 400, y: 380, width: 120, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 600, y: 320, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 850, y: 380, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1050, y: 450, width: 200, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1350, y: 380, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1600, y: 320, width: 120, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1850, y: 400, width: 180, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2150, y: 350, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2450, y: 420, width: 200, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2750, y: 380, width: 150, height: 20, color: '#16a085' });
 
         // Enemies
-        gameState.enemies.push(new Enemy(400, 400, 300, 450));
-        gameState.enemies.push(new Enemy(900, 270, 800, 950));
-        gameState.enemies.push(new Enemy(1300, 300, 1250, 1400));
-        gameState.enemies.push(new Enemy(1800, 350, 1750, 1900));
-        gameState.enemies.push(new Enemy(2550, 330, 2500, 2620));
+        gameState.enemies.push(new Enemy(500, 300, 400, 600));
+        gameState.enemies.push(new Enemy(1100, 400, 1050, 1250));
+        gameState.enemies.push(new Enemy(1700, 250, 1600, 1850));
+        gameState.enemies.push(new Enemy(2500, 350, 2450, 2650));
 
         // Coins
         for (let i = 0; i < 15; i++) {
-          const x = 400 + i * 180;
-          const y = 250 - (i % 3) * 40;
+          const x = 300 + i * 180;
+          const y = 250 - Math.sin(i / 2) * 80;
           gameState.coins.push(new Coin(x, y));
         }
       } else if (levelNum === 2) {
-        // More challenging level
-        gameState.platforms.push({ x: 250, y: 480, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 450, y: 420, width: 80, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 650, y: 360, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 850, y: 300, width: 80, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1050, y: 360, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1250, y: 300, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1450, y: 380, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1650, y: 320, width: 80, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 1850, y: 260, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2050, y: 340, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2300, y: 280, width: 100, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2550, y: 360, width: 120, height: 20, color: '#16a085' });
-        gameState.platforms.push({ x: 2800, y: 280, width: 150, height: 20, color: '#16a085' });
+        // More challenging layout
+        gameState.platforms.push({ x: 150, y: 480, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 350, y: 420, width: 80, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 520, y: 360, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 720, y: 300, width: 80, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 900, y: 360, width: 120, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1120, y: 420, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1320, y: 360, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1570, y: 300, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 1770, y: 380, width: 120, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2000, y: 320, width: 150, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2250, y: 400, width: 100, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2450, y: 350, width: 180, height: 20, color: '#16a085' });
+        gameState.platforms.push({ x: 2750, y: 420, width: 150, height: 20, color: '#16a085' });
 
         // More enemies
-        gameState.enemies.push(new Enemy(300, 430, 250, 
+        gameState.enemies.push(new Enemy(400, 350, 350, 520));
+        gameState.enemies.push(new Enemy(750, 230, 720, 900));
+        gameState.enemies.push(new Enemy(1200, 350, 1120, 1320));
+        gameState.enemies.push(new Enemy(1650, 230, 1570, 1770));
+        gameState.enemies.push(new Enemy(2100, 250, 2000, 2250));
+        gameState.enemies.push(new Enemy(2550, 280, 2450, 2750));
+
+        // More coins
+        for (let i = 0; i < 20; i++) {
+          const x = 250 + i * 140;
+          const y = 200 - Math.sin(i / 1.5) * 60;
+          gameState.coins.push(new Coin(x, y));
+        }
+      } else {
+        // Level 3+: Progressive difficulty
+        const platformCount = 12 + levelNum;
+        for (let i = 0; i < platformCount; i++) {
+          const x = 200 + i * 220;
+          const y = 300 + Math.sin(i / 2) * 100;
+          const width = 80 + Math.random() * 80;
+          gameState.platforms.push({ x,

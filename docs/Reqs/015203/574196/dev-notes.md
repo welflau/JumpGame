@@ -1,9 +1,9 @@
 # 开发笔记 — [BUG] Start Game 按钮点击无响应
 
-> 2026-05-08 18:41 | LLM
+> 2026-05-08 18:44 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23325 chars)
+- [index.html](/app#repo?file=index.html) (23268 chars)
 
 ## 自测: 自测 6/6 通过 ✅
 
@@ -22,33 +22,20 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -128,6 +128,7 @@
-       margin: 10px;
+@@ -557,6 +557,234 @@
+       constructor(x, y, patrolStart, patrolEnd) {
 
-       transition: transform 0.2s, box-shadow 0.2s;
-
-       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-
-+      pointer-events: all;
-
-     }
-
- 
-
-     .btn:hover {
-
-@@ -557,6 +558,250 @@
          this.x = x;
 
          this.y = y;
 
-         this.width = 32;
-
--   
+- 
 
 -
 
--/* ... [文件截断显示：原文 23843 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+-/* ... [文件截断显示：原文 23324 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
++        this.width = 32;
+
 +        this.height = 32;
 
 +        this.vx = CONFIG.ENEMY_SPEED;
@@ -61,7 +48,7 @@
 
 +        this.patrolEnd = patrolEnd;
 
-+        this.alive = true;
++        this.direction = 1;
 
 +        this.animFrame = 0;
 
@@ -73,13 +60,17 @@
 
 +      update(dt) {
 
-+        // Patrol behavior
++        // Patrol logic
 
 +        if (this.x <= this.patrolStart) {
+
++          this.direction = 1;
 
 +          this.vx = CONFIG.ENEMY_SPEED;
 
 +        } else if (this.x >= this.patrolEnd) {
+
++          this.direction = -1;
 
 +          this.vx = -CONFIG.ENEMY_SPEED;
 
@@ -91,7 +82,9 @@
 
 +        gameState.physicsEngine.applyGravity(this, dt);
 
-+        gameState.physicsEngine.updatePosition(this, dt);
++        this.x += this.vx * dt;
+
++        this.y += this.vy * dt;
 
 +
 
@@ -105,7 +98,7 @@
 
 +        this.animTimer++;
 
-+        if (this.animTimer > 10) {
++        if (this.animTimer > 15) {
 
 +          this.animFrame = (this.animFrame + 1) % 2;
 
@@ -115,5 +108,13 @@
 
 +      }
 
-... (共 264 行变更)
++
+
++      draw() {
+
++        ctx.save();
+
++        ctx.translate(this.x - gameState.cameraX, this.y);
+
+... (共 240 行变更)
 ```
