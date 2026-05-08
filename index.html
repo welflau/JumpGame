@@ -561,9 +561,9 @@
         this.height = 32;
         this.vx = CONFIG.ENEMY_SPEED;
         this.vy = 0;
+        this.onGround = false;
         this.patrolStart = patrolStart;
         this.patrolEnd = patrolEnd;
-        this.onGround = false;
         this.alive = true;
         this.animFrame = 0;
         this.animTimer = 0;
@@ -594,31 +594,54 @@
 
       draw() {
         if (!this.alive) return;
-        
+
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
 
         // Body
         ctx.fillStyle = '#e74c3c';
         ctx.fillRect(0, 8, 32, 24);
-        
+
         // Eyes
         ctx.fillStyle = '#fff';
         ctx.fillRect(8, 12, 6, 6);
         ctx.fillRect(18, 12, 6, 6);
-        
+
         ctx.fillStyle = '#000';
-        ctx.fillRect(10, 14, 3, 3);
-        ctx.fillRect(20, 14, 3, 3);
-        
+        const eyeOffset = this.animFrame * 2;
+        ctx.fillRect(10 + eyeOffset, 14, 3, 3);
+        ctx.fillRect(20 + eyeOffset, 14, 3, 3);
+
         // Spikes
         ctx.fillStyle = '#c0392b';
         for (let i = 0; i < 4; i++) {
-          const offset = this.animFrame === 0 ? 0 : 2;
-          ctx.fillRect(i * 8, offset, 8, 4);
+          ctx.beginPath();
+          ctx.moveTo(i * 8 + 4, 8);
+          ctx.lineTo(i * 8, 0);
+          ctx.lineTo(i * 8 + 8, 0);
+          ctx.closePath();
+          ctx.fill();
         }
 
         ctx.restore();
+      }
+
+      die() {
+        this.alive = false;
+        gameState.score += CONFIG.ENEMY_KILL_SCORE;
+        updateHUD();
+        
+        // Create death particles
+        for (let i = 0; i < 12; i++) {
+          gameState.particleSystem.push({
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 40,
+            color: '#e74c3c'
+          });
+        }
       }
     }
 
@@ -634,7 +657,7 @@
         this.collected = false;
         this.animFrame = 0;
         this.animTimer = 0;
-        this.bobOffset = 0;
+        this.floatOffset = Math.random() * Math.PI * 2;
       }
 
       update() {
@@ -643,27 +666,47 @@
           this.animFrame = (this.animFrame + 1) % 8;
           this.animTimer = 0;
         }
-        this.bobOffset = Math.sin(Date.now() / 200) * 3;
       }
 
       draw() {
         if (this.collected) return;
-        
+
+        const floatY = Math.sin(gameState.frameCount * 0.05 + this.floatOffset) * 5;
+
         ctx.save();
-        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + this.bobOffset);
+        ctx.translate(this.x - gameState.cameraX + this.width / 2, this.y + this.height / 2 + floatY);
         ctx.rotate(this.animFrame * Math.PI / 4);
-        
+
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
         ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.fillStyle = '#f39c12';
         ctx.beginPath();
         ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
+      }
+
+      collect() {
+        if (this.collected) return;
+        this.collected = true;
+        gameState.score += CONFIG.COIN_VALUE;
+        updateHUD();
+
+        // Create collection particles
+        for (let i = 0; i < 8; i++) {
+          gameState.particleSystem.push({
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            life: 30,
+            color: '#f1c40f'
+          });
+        }
       }
     }
 
@@ -676,76 +719,33 @@
         this.y = y;
         this.width = 40;
         this.height = 80;
-        this.waveOffset = 0;
+        this.animFrame = 0;
       }
 
       update() {
-        this.waveOffset += 0.1;
+        this.animFrame++;
       }
 
       draw() {
         ctx.save();
         ctx.translate(this.x - gameState.cameraX, this.y);
-        
+
         // Pole
         ctx.fillStyle = '#7f8c8d';
         ctx.fillRect(0, 0, 4, 80);
-        
+
         // Flag
         ctx.fillStyle = '#2ecc71';
+        const wave = Math.sin(this.animFrame * 0.1);
         ctx.beginPath();
-        ctx.moveTo(4, 10);
-        for (let i = 0; i <= 30; i += 2) {
-          const wave = Math.sin(this.waveOffset + i / 5) * 3;
-          ctx.lineTo(4 + 30 + wave, 10 + i);
-        }
+        ctx.moveTo(4, 0);
+        ctx.lineTo(40, 10);
+        ctx.lineTo(40 + wave * 3, 20);
+        ctx.lineTo(40, 30);
         ctx.lineTo(4, 40);
         ctx.closePath();
         ctx.fill();
-        
-        ctx.restore();
-      }
-    }
 
-    // ============================================
-    // Platform Class
-    // ============================================
-    class Platform {
-      constructor(x, y, width, height, type = 'normal') {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.type = type;
-      }
-
-      draw() {
-        ctx.save();
-        ctx.translate(-gameState.cameraX, 0);
-        
-        if (this.type === 'grass') {
-          // Grass platform
-          ctx.fillStyle = '#27ae60';
-          ctx.fillRect(this.x, this.y, this.width, 8);
-          ctx.fillStyle = '#8e44ad';
-          ctx.fillRect(this.x, this.y + 8, this.width, this.height - 8);
-        } else if (this.type === 'stone') {
-          // Stone platform
-          ctx.fillStyle = '#7f8c8d';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
-          ctx.strokeStyle = '#95a5a6';
-          ctx.lineWidth = 2;
-          for (let i = 0; i < this.width; i += 32) {
-            for (let j = 0; j < this.height; j += 32) {
-              ctx.strokeRect(this.x + i, this.y + j, 32, 32);
-            }
-          }
-        } else {
-          // Normal platform
-          ctx.fillStyle = '#34495e';
-          ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
-        
         ctx.restore();
       }
     }
@@ -760,69 +760,57 @@
       gameState.particleSystem = [];
 
       // Ground
-      gameState.platforms.push(new Platform(0, 550, gameState.levelWidth, 50, 'grass'));
+      gameState.platforms.push({ x: 0, y: 550, width: gameState.levelWidth, height: 50, color: '#27ae60' });
 
       if (levelNum === 1) {
-        // Level 1: Tutorial
-        gameState.platforms.push(new Platform(300, 450, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(600, 350, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(900, 250, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(1200, 350, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(1500, 450, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(1800, 350, 300, 20, 'stone'));
-        gameState.platforms.push(new Platform(2200, 250, 200, 20, 'stone'));
-        gameState.platforms.push(new Platform(2500, 350, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(2800, 450, 300, 20, 'grass'));
+        // Starting platforms
+        gameState.platforms.push({ x: 200, y: 450, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 400, y: 380, width: 120, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 600, y: 320, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 850, y: 380, width: 120, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1050, y: 450, width: 200, height: 20, color: '#2ecc71' });
+
+        // Mid section
+        gameState.platforms.push({ x: 1350, y: 400, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1550, y: 350, width: 100, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 1750, y: 300, width: 150, height: 20, color: '#2ecc71' });
+
+        // End section
+        gameState.platforms.push({ x: 2000, y: 400, width: 200, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 2300, y: 450, width: 150, height: 20, color: '#2ecc71' });
+        gameState.platforms.push({ x: 2550, y: 400, width: 200, height: 20, color: '#2ecc71' });
 
         // Enemies
-        gameState.enemies.push(new Enemy(400, 400, 300, 500));
-        gameState.enemies.push(new Enemy(700, 300, 600, 800));
-        gameState.enemies.push(new Enemy(1300, 300, 1200, 1400));
-        gameState.enemies.push(new Enemy(1900, 300, 1800, 2100));
+        gameState.enemies.push(new Enemy(500, 300, 400, 650));
+        gameState.enemies.push(new Enemy(1100, 400, 1050, 1250));
+        gameState.enemies.push(new Enemy(2100, 350, 2000, 2200));
 
         // Coins
         for (let i = 0; i < 15; i++) {
-          const x = 400 + i * 150;
-          const y = 200 - Math.sin(i / 2) * 50;
+          const x = 300 + i * 150;
+          const y = 250 - Math.sin(i * 0.5) * 100;
           gameState.coins.push(new Coin(x, y));
         }
+
+        // Flag
+        gameState.flag = new Flag(2900, 470);
 
       } else if (levelNum === 2) {
-        // Level 2: Intermediate
-        gameState.platforms.push(new Platform(200, 480, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(450, 400, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(700, 320, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(950, 240, 150, 20, 'stone'));
-        gameState.platforms.push(new Platform(1200, 320, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(1500, 400, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(1800, 300, 250, 20, 'stone'));
-        gameState.platforms.push(new Platform(2150, 200, 200, 20, 'stone'));
-        gameState.platforms.push(new Platform(2450, 300, 200, 20, 'grass'));
-        gameState.platforms.push(new Platform(2750, 400, 300, 20, 'grass'));
+        // More challenging level
+        gameState.platforms.push({ x: 150, y: 450, width: 100, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 350, y: 380, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 520, y: 320, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 700, y: 260, width: 100, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 900, y: 320, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 1070, y: 380, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 1250, y: 450, width: 150, height: 20, color: '#e67e22' });
 
-        // More enemies
-        gameState.enemies.push(new Enemy(250, 430, 200, 350));
-        gameState.enemies.push(new Enemy(500, 350, 450, 600));
-        gameState.enemies.push(new Enemy(750, 270, 700, 850));
-        gameState.enemies.push(new Enemy(1000, 190, 950, 1100));
-        gameState.enemies.push(new Enemy(1550, 350, 1500, 1700));
-        gameState.enemies.push(new Enemy(1900, 250, 1800, 2050));
+        // Floating platforms
+        gameState.platforms.push({ x: 1500, y: 350, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 1680, y: 280, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 1860, y: 220, width: 100, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 2060, y: 280, width: 80, height: 20, color: '#e67e22' });
+        gameState.platforms.push({ x: 2240, y: 350, width: 80, height: 20, color: '#e67e22' });
 
-        // More coins
-        for (let i = 0; i < 20; i++) {
-          const x = 300 + i * 130;
-          const y = 150 - Math.sin(i / 1.5) * 40;
-          gameState.coins.push(new Coin(x, y));
-        }
-
-      } else {
-        // Level 3+: Advanced
-        for (let i = 0; i < 15; i++) {
-          const x = 200 + i * 200;
-          const y = 450 - Math.sin(i / 2) * 100;
-          const width = 100 + Math.random() * 100;
-          gameState.platforms.push(new Platform(x, y, width, 20, i % 2 === 0 ? 'stone' : 'grass'));
-        }
-
-        // Many enemies
-        for (let i = 0; i < 10; i
+        // End platforms
+        gameState.platforms.push({ x: 2450, y: 420, width: 150, height: 20, color: '#e67e22
