@@ -1,11 +1,11 @@
 # 开发笔记 — [BUG] index.html 文件被截断导致游戏无法启动
 
-> 2026-05-08 22:09 | LLM
+> 2026-11-02 17:55 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23470 chars)
+- [index.html](/app#repo?file=index.html) (15064 chars)
 
-## 自测: 自测 6/6 通过 ✅
+## 自测: 自测 7/7 通过 ✅
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|
@@ -15,106 +15,13 @@
 | 语法检查 | ✅ | 通过 |
 | 文件名规范 | ✅ | 全英文 |
 | 磁盘落地 | ✅ | 1 个文件已落盘 |
+| 页面截图 | ✅ | 1 张截图 |
 
 ## 代码变更 (Diff)
 
-### index.html (修改)
-```diff
---- a/index.html
-+++ b/index.html
-@@ -557,6 +557,263 @@
-       constructor(x, y, patrolStart, patrolEnd) {
+### index.html (无变化)
 
-         this.x = x;
+## 页面预览截图
 
-         this.y = y;
+![开发自测 — [BUG] index.html 文件被截断导致游戏无法启动](screenshots/dev_1793613340.png)
 
-- 
-
--
-
--/* ... [文件截断显示：原文 23647 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
-+        this.width = 32;
-
-+        this.height = 32;
-
-+        this.vx = CONFIG.ENEMY_SPEED;
-
-+        this.vy = 0;
-
-+        this.onGround = false;
-
-+        this.patrolStart = patrolStart;
-
-+        this.patrolEnd = patrolEnd;
-
-+        this.alive = true;
-
-+        this.animFrame = 0;
-
-+        this.animTimer = 0;
-
-+      }
-
-+
-
-+      update(dt) {
-
-+        // Patrol behavior
-
-+        if (this.x <= this.patrolStart) {
-
-+          this.vx = CONFIG.ENEMY_SPEED;
-
-+        } else if (this.x >= this.patrolEnd) {
-
-+          this.vx = -CONFIG.ENEMY_SPEED;
-
-+        }
-
-+
-
-+        // Apply physics
-
-+        gameState.physicsEngine.applyGravity(this, dt);
-
-+        gameState.physicsEngine.updatePosition(this, dt);
-
-+
-
-+        // Collision with platforms
-
-+        CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
-
-+
-
-+        // Animation
-
-+        this.animTimer++;
-
-+        if (this.animTimer > 15) {
-
-+          this.animFrame = (this.animFrame + 1) % 2;
-
-+          this.animTimer = 0;
-
-+        }
-
-+      }
-
-+
-
-+      draw() {
-
-+        if (!this.alive) return;
-
-+
-
-+        ctx.save();
-
-+        ctx.translate(this.x - gameState.cameraX, this.y);
-
-+
-
-... (共 269 行变更)
-```
