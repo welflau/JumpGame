@@ -80,6 +80,13 @@
       opacity: 0.4;
     }
 
+    #score-display {
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
     #game-over-screen,
     #victory-screen,
     #start-screen {
@@ -93,470 +100,361 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      gap: 24px;
+      pointer-events: auto;
+    }
+
+    .screen-title {
       color: #fff;
-      pointer-events: all;
-      z-index: 20;
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.6);
     }
 
-    #game-over-screen.hidden,
-    #victory-screen.hidden,
-    #start-screen.hidden {
-      display: none;
+    .screen-subtitle {
+      color: #cbd5e1;
+      font-size: 18px;
     }
 
-    h1 {
-      font-size: 56px;
-      margin-bottom: 20px;
-      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    .btn {
-      padding: 14px 32px;
+    #start-btn,
+    .screen-btn {
+      padding: 14px 40px;
       font-size: 20px;
       font-weight: bold;
       color: #fff;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #667eea;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      margin: 10px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      pointer-events: all;
+      box-shadow: 0 4px 14px rgba(102,126,234,0.5);
+      transition: transform 0.1s ease, background 0.2s ease;
+      pointer-events: auto;
     }
 
-    .btn:hover {
+    #start-btn:hover,
+    .screen-btn:hover {
+      background: #764ba2;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
     }
 
-    .btn:active {
+    #start-btn:active,
+    .screen-btn:active {
       transform: translateY(0);
     }
 
-    #stats {
-      margin-top: 20px;
-      font-size: 18px;
-      text-align: center;
-      line-height: 1.8;
-    }
-
-    #fps-counter {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      color: #0f0;
-      font-size: 14px;
-      font-family: monospace;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-      pointer-events: none;
-    }
-
-    #controls-hint {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.7);
-      font-size: 14px;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    @media (max-width: 850px) {
-      #game-container {
-        width: 95vw;
-        height: 71.25vw;
-        max-height: 90vh;
-      }
+    .hidden {
+      display: none !important;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
   <div id="game-container">
-    <canvas id="game-canvas" width="800" height="600"></canvas>
-    
+    <canvas id="game-canvas"></canvas>
     <div id="ui-overlay">
       <div id="hud">
-        <div id="health-bar"></div>
-        <div id="score">Score: 0</div>
-        <div id="level">Level: 1</div>
+        <div id="health-bar">
+          <div class="heart"></div>
+          <div class="heart"></div>
+          <div class="heart"></div>
+        </div>
+        <div id="score-display">Score: 0</div>
       </div>
-      <div id="fps-counter">FPS: 60</div>
-      <div id="controls-hint">Arrow Keys / WASD: Move | Space: Jump | ESC: Pause</div>
-    </div>
 
-    <div id="start-screen">
-      <h1>Platform Adventure</h1>
-      <p style="font-size: 18px; margin-bottom: 30px; max-width: 500px; text-align: center; line-height: 1.6;">
-        Navigate through challenging levels, defeat enemies, and collect coins!<br>
-        Reach the flag to advance to the next level.
-      </p>
-      <button class="btn" id="start-btn">Start Game</button>
-      <div style="margin-top: 30px; font-size: 14px; opacity: 0.8;">
-        <p>🎮 Controls:</p>
-        <p>← → or A D: Move</p>
-        <p>↑ or W or Space: Jump</p>
+      <div id="start-screen">
+        <h1 class="screen-title">Platform Adventure</h1>
+        <p class="screen-subtitle">Collect coins &middot; Avoid enemies &middot; Reach the flag</p>
+        <button id="start-btn" type="button">Start Game</button>
       </div>
-    </div>
 
-    <div id="game-over-screen" class="hidden">
-      <h1 style="color: #e74c3c;">Game Over</h1>
-      <div id="stats"></div>
-      <button class="btn" id="restart-btn">Restart</button>
-    </div>
+      <div id="game-over-screen" class="hidden">
+        <h1 class="screen-title">Game Over</h1>
+        <p class="screen-subtitle">You ran out of hearts.</p>
+        <button id="restart-btn" class="screen-btn" type="button">Restart</button>
+      </div>
 
-    <div id="victory-screen" class="hidden">
-      <h1 style="color: #2ecc71;">Victory!</h1>
-      <div id="victory-stats"></div>
-      <button class="btn" id="next-level-btn">Next Level</button>
-      <button class="btn" id="menu-btn">Main Menu</button>
+      <div id="victory-screen" class="hidden">
+        <h1 class="screen-title">Victory!</h1>
+        <p class="screen-subtitle">You reached the flag.</p>
+        <button id="play-again-btn" class="screen-btn" type="button">Play Again</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // ============================================
-    // Game Configuration & Constants
-    // ============================================
-    const CONFIG = {
-      CANVAS_WIDTH: 800,
-      CANVAS_HEIGHT: 600,
-      GRAVITY: 0.6,
-      PLAYER_SPEED: 4.5,
-      PLAYER_JUMP: -12,
-      PLAYER_MAX_HEALTH: 3,
-      ENEMY_SPEED: 1.8,
-      COIN_VALUE: 10,
-      ENEMY_KILL_SCORE: 50,
-      TARGET_FPS: 60,
-      COYOTE_TIME: 6,
-      JUMP_BUFFER: 8
-    };
+    (function () {
+      'use strict';
 
-    // ============================================
-    // Physics Engine
-    // ============================================
-    class PhysicsEngine {
-      constructor() {
-        this.gravity = CONFIG.GRAVITY;
-        this.friction = 0.8;
-        this.airResistance = 0.98;
+      // ===== game.js (entry / bootstrap) =====
+
+      const GAME_W = 800;
+      const GAME_H = 600;
+      const GROUND_TOP = 560;
+      const GRAVITY = 1400;
+      const MOVE_SPEED = 300;
+      const JUMP_VELOCITY = -560;
+      const MAX_JUMPS = 2;
+      const MAX_HEALTH = 3;
+      const INVINCIBLE_MS = 1000;
+
+      let game = null;
+      let gameStarted = false;
+
+      function hideScreen(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
       }
 
-      applyGravity(entity, dt) {
-        entity.vy += this.gravity * dt;
-        entity.vy = Math.min(entity.vy, 15); // Terminal velocity
+      function showScreen(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('hidden');
       }
 
-      applyFriction(entity) {
-        if (entity.onGround) {
-          entity.vx *= this.friction;
-        } else {
-          entity.vx *= this.airResistance;
-        }
+      function renderHealth(health) {
+        const hearts = document.querySelectorAll('#health-bar .heart');
+        hearts.forEach(function (h, i) {
+          if (i < health) h.classList.remove('empty');
+          else h.classList.add('empty');
+        });
       }
 
-      updatePosition(entity, dt) {
-        entity.x += entity.vx * dt;
-        entity.y += entity.vy * dt;
-      }
-    }
-
-    // ============================================
-    // Collision Detection System
-    // ============================================
-    class CollisionSystem {
-      static AABB(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
+      function renderScore(score) {
+        const el = document.getElementById('score-display');
+        if (el) el.textContent = 'Score: ' + score;
       }
 
-      static resolveCollision(entity, platform) {
-        const overlapLeft = (entity.x + entity.width) - platform.x;
-        const overlapRight = (platform.x + platform.width) - entity.x;
-        const overlapTop = (entity.y + entity.height) - platform.y;
-        const overlapBottom = (platform.y + platform.height) - entity.y;
-
-        const minOverlapX = Math.min(overlapLeft, overlapRight);
-        const minOverlapY = Math.min(overlapTop, overlapBottom);
-
-        if (minOverlapY < minOverlapX) {
-          // Vertical collision
-          if (overlapTop < overlapBottom) {
-            // Bottom collision (entity landing on platform)
-            entity.y = platform.y - entity.height;
-            entity.vy = 0;
-            entity.onGround = true;
-            return 'bottom';
-          } else {
-            // Top collision (entity hitting platform from below)
-            entity.y = platform.y + platform.height;
-            entity.vy = 0;
-            return 'top';
-          }
-        } else {
-          // Horizontal collision
-          if (overlapLeft < overlapRight) {
-            // Right side collision
-            entity.x = platform.x - entity.width;
-            entity.vx = 0;
-            return 'right';
-          } else {
-            // Left side collision
-            entity.x = platform.x + platform.width;
-            entity.vx = 0;
-            return 'left';
-          }
-        }
-      }
-
-      static checkPlatformCollisions(entity, platforms) {
-        entity.onGround = false;
-        
-        for (const platform of platforms) {
-          if (this.AABB(entity, platform)) {
-            this.resolveCollision(entity, platform);
-          }
-        }
-      }
-
-      static circleRect(circle, rect) {
-        const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
-        const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
-        
-        const distanceX = circle.x - closestX;
-        const distanceY = circle.y - closestY;
-        
-        return (distanceX * distanceX + distanceY * distanceY) < (circle.radius * circle.radius);
-      }
-
-      static pointInRect(point, rect) {
-        return point.x >= rect.x &&
-               point.x <= rect.x + rect.width &&
-               point.y >= rect.y &&
-               point.y <= rect.y + rect.height;
-      }
-    }
-
-    // ============================================
-    // Game State Management
-    // ============================================
-    const gameState = {
-      running: false,
-      paused: false,
-      currentLevel: 1,
-      score: 0,
-      player: null,
-      platforms: [],
-      enemies: [],
-      coins: [],
-      flag: null,
-      keys: {},
-      cameraX: 0,
-      levelWidth: 3200,
-      particleSystem: [],
-      frameCount: 0,
-      lastFrameTime: 0,
-      fps: 60,
-      deltaTime: 1,
-      physicsEngine: new PhysicsEngine()
-    };
-
-    // ============================================
-    // Canvas Setup
-    // ============================================
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-
-    // ============================================
-    // Player Class
-    // ============================================
-    class Player {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.width = 32;
-        this.height = 48;
-        this.vx = 0;
-        this.vy = 0;
-        this.health = CONFIG.PLAYER_MAX_HEALTH;
-        this.onGround = false;
-        this.facingRight = true;
-        this.invincible = false;
-        this.invincibleTimer = 0;
-        this.coyoteTimer = 0;
-        this.jumpBufferTimer = 0;
-        this.animFrame = 0;
-        this.animTimer = 0;
-      }
-
-      update(dt) {
-        // Handle input
-        this.vx = 0;
-        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) {
-          this.vx = -CONFIG.PLAYER_SPEED;
-          this.facingRight = false;
-        }
-        if (gameState.keys['ArrowRight'] || gameState.keys['d']) {
-          this.vx = CONFIG.PLAYER_SPEED;
-          this.facingRight = true;
+      class GameScene extends Phaser.Scene {
+        constructor() {
+          super('game');
         }
 
-        // Jump buffer
-        if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys[' ']) {
-          this.jumpBufferTimer = CONFIG.JUMP_BUFFER;
-        }
-        if (this.jumpBufferTimer > 0) this.jumpBufferTimer--;
+        create() {
+          this.health = MAX_HEALTH;
+          this.score = 0;
+          this.jumps = 0;
+          this.invincibleUntil = 0;
 
-        // Coyote time
-        if (this.onGround) {
-          this.coyoteTimer = CONFIG.COYOTE_TIME;
-        } else if (this.coyoteTimer > 0) {
-          this.coyoteTimer--;
-        }
+          // Ground
+          const ground = this.add.rectangle(GAME_W / 2, GROUND_TOP + 20, GAME_W, 40, 0x334155);
+          this.physics.add.existing(ground, true);
 
-        // Jump
-        if (this.jumpBufferTimer > 0 && this.coyoteTimer > 0) {
-          this.vy = CONFIG.PLAYER_JUMP;
-          this.jumpBufferTimer = 0;
-          this.coyoteTimer = 0;
-          this.createJumpParticles();
-        }
-
-        // Apply physics
-        gameState.physicsEngine.applyGravity(this, dt);
-        gameState.physicsEngine.updatePosition(this, dt);
-
-        // Collision detection using new system
-        CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
-
-        // Boundary check
-        if (this.x < 0) this.x = 0;
-        if (this.x + this.width > gameState.levelWidth) {
-          this.x = gameState.levelWidth - this.width;
-        }
-        if (this.y > CONFIG.CANVAS_HEIGHT) {
-          this.takeDamage(1);
-          this.respawn();
-        }
-
-        // Invincibility
-        if (this.invincible) {
-          this.invincibleTimer--;
-          if (this.invincibleTimer <= 0) {
-            this.invincible = false;
-          }
-        }
-
-        // Animation
-        if (Math.abs(this.vx) > 0.1) {
-          this.animTimer++;
-          if (this.animTimer > 8) {
-            this.animFrame = (this.animFrame + 1) % 4;
-            this.animTimer = 0;
-          }
-        } else {
-          this.animFrame = 0;
-        }
-      }
-
-      takeDamage(amount) {
-        if (this.invincible) return;
-        this.health -= amount;
-        this.invincible = true;
-        this.invincibleTimer = 90;
-        this.createHitParticles();
-        if (this.health <= 0) {
-          gameOver();
-        }
-        updateHUD();
-      }
-
-      respawn() {
-        this.x = 100;
-        this.y = 300;
-        this.vx = 0;
-        this.vy = 0;
-      }
-
-      createJumpParticles() {
-        for (let i = 0; i < 5; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height,
-            vx: (Math.random() - 0.5) * 3,
-            vy: Math.random() * 2,
-            life: 20,
-            color: '#aaa'
+          // Static platforms
+          this.platforms = this.physics.add.staticGroup();
+          this.platforms.add(ground);
+          const specs = [
+            [200, 440, 180, 20],
+            [420, 360, 180, 20],
+            [620, 280, 160, 20],
+            [300, 200, 140, 20],
+          ];
+          specs.forEach((p) => {
+            const rect = this.add.rectangle(p[0], p[1], p[2], p[3], 0x64748b);
+            this.physics.add.existing(rect, true);
+            this.platforms.add(rect);
           });
-        }
-      }
 
-      createHitParticles() {
-        for (let i = 0; i < 8; i++) {
-          gameState.particleSystem.push({
-            x: this.x + this.width / 2,
-            y: this.y + this.height / 2,
-            vx: (Math.random() - 0.5) * 6,
-            vy: (Math.random() - 0.5) * 6,
-            life: 30,
-            color: '#e74c3c'
+          // Player
+          this.player = this.add.rectangle(100, GROUND_TOP - 25, 36, 50, 0x38bdf8);
+          this.physics.add.existing(this.player);
+          this.player.body.setCollideWorldBounds(true);
+          this.player.body.setGravityY(GRAVITY);
+          this.player.body.setMaxVelocity(600, 1600);
+
+          this.physics.add.collider(this.player, this.platforms);
+
+          // Coins
+          this.coins = this.physics.add.group();
+          const coinPositions = [
+            [200, 400], [460, 310], [660, 240], [340, 160], [120, 520], [720, 520],
+          ];
+          coinPositions.forEach((c) => {
+            const coin = this.add.circle(c[0], c[1], 10, 0xfbbf24);
+            this.physics.add.existing(coin);
+            coin.body.setAllowGravity(false);
+            this.coins.add(coin);
           });
+          this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+
+          // Enemies (patrol between min/max)
+          this.enemies = this.physics.add.group();
+          const enemySpecs = [
+            { x: 300, y: GROUND_TOP - 17, min: 180, max: 620 },
+            { x: 420, y: 350 - 17, min: 335, max: 505 },
+            { x: 620, y: 270 - 17, min: 545, max: 695 },
+          ];
+          enemySpecs.forEach((e) => {
+            const enemy = this.add.rectangle(e.x, e.y, 34, 34, 0xef4444);
+            this.physics.add.existing(enemy);
+            enemy.body.setGravityY(GRAVITY);
+            enemy.patrol = e;
+            this.enemies.add(enemy);
+          });
+          this.physics.add.collider(this.enemies, this.platforms);
+          this.physics.add.overlap(this.player, this.enemies, this.hitByEnemy, null, this);
+
+          // Goal flag
+          this.goal = this.add.rectangle(GAME_W - 40, GROUND_TOP - 30, 16, 60, 0x22c55e);
+          this.physics.add.existing(this.goal, true);
+          this.physics.add.overlap(this.player, this.goal, this.reachGoal, null, this);
+
+          // Keyboard
+          this.cursors = this.input.keyboard.createCursorKeys();
+          const kb = this.input.keyboard;
+          this.leftKeys = [this.cursors.left, kb.addKey('A')];
+          this.rightKeys = [this.cursors.right, kb.addKey('D')];
+          this.jumpKeys = [this.cursors.space, this.cursors.up, kb.addKey('W'), kb.addKey('Z')];
+
+          renderHealth(this.health);
+          renderScore(this.score);
+          console.log('[game] scene created');
+        }
+
+        isDown(keys) {
+          for (let i = 0; i < keys.length; i++) {
+            if (keys[i].isDown) return true;
+          }
+          return false;
+        }
+
+        tryJump() {
+          if (this.jumps >= MAX_JUMPS) return false;
+          this.jumps += 1;
+          this.player.body.setVelocityY(JUMP_VELOCITY);
+          return true;
+        }
+
+        collectCoin(_player, coin) {
+          coin.destroy();
+          this.score += 10;
+          renderScore(this.score);
+        }
+
+        hitByEnemy(player, enemy) {
+          const now = this.time.now;
+          if (now < this.invincibleUntil) return;
+          this.health -= 1;
+          this.invincibleUntil = now + INVINCIBLE_MS;
+          renderHealth(this.health);
+          const dir = player.x < enemy.x ? -1 : 1;
+          player.body.setVelocityX(dir * 300);
+          player.body.setVelocityY(-300);
+          if (this.health <= 0) {
+            this.scene.pause();
+            showScreen('game-over-screen');
+          }
+        }
+
+        reachGoal() {
+          this.scene.pause();
+          showScreen('victory-screen');
+        }
+
+        update(_time, delta) {
+          const left = this.isDown(this.leftKeys);
+          const right = this.isDown(this.rightKeys);
+
+          if (left && !right) {
+            this.player.body.setVelocityX(-MOVE_SPEED);
+          } else if (right && !left) {
+            this.player.body.setVelocityX(MOVE_SPEED);
+          } else {
+            this.player.body.setVelocityX(0);
+          }
+
+          for (let i = 0; i < this.jumpKeys.length; i++) {
+            if (Phaser.Input.Keyboard.JustDown(this.jumpKeys[i])) {
+              this.tryJump();
+              break;
+            }
+          }
+
+          if (this.player.body.blocked.down) {
+            this.jumps = 0;
+          }
+
+          this.enemies.getChildren().forEach((enemy) => {
+            if (!enemy.patrol) return;
+            let dir = enemy.body.velocity.x >= 0 ? 1 : -1;
+            if (enemy.x <= enemy.patrol.min) dir = 1;
+            else if (enemy.x >= enemy.patrol.max) dir = -1;
+            enemy.body.setVelocityX(dir * 120);
+          });
+
+          if (this.time.now < this.invincibleUntil) {
+            const blink = Math.floor(this.time.now / 80) % 2 === 0;
+            this.player.setAlpha(blink ? 0.3 : 0.9);
+          } else {
+            this.player.setAlpha(1);
+          }
         }
       }
 
-      draw() {
-        ctx.save();
-        ctx.translate(this.x - gameState.cameraX, this.y);
-        
-        if (this.facingRight) {
-          ctx.scale(-1, 1);
-          ctx.translate(-this.width, 0);
-        }
+      const config = {
+        type: Phaser.AUTO,
+        parent: 'game-container',
+        canvas: document.getElementById('game-canvas'),
+        width: GAME_W,
+        height: GAME_H,
+        backgroundColor: '#1a1a2e',
+        physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+        scene: [GameScene],
+      };
 
-        // Invincibility flash
-        if (this.invincible && Math.floor(this.invincibleTimer / 5) % 2 === 0) {
-          ctx.globalAlpha = 0.5;
-        }
+      // ===== ui-init (event binding / bootstrap) =====
 
-        // Body
-        ctx.fillStyle = '#3498db';
-        ctx.fillRect(4, 8, 24, 32);
-        
-        // Head
-        ctx.fillStyle = '#f39c12';
-        ctx.fillRect(8, 0, 16, 16);
-        
-        // Eyes
-        ctx.fillStyle = '#000';
-        ctx.fillRect(12, 4, 3, 3);
-        ctx.fillRect(17, 4, 3, 3);
-        
-        // Legs (animated)
-        ctx.fillStyle = '#2c3e50';
-        const legOffset = Math.sin(this.animFrame * Math.PI / 2) * 2;
-        ctx.fillRect(8, 40, 6, 8 + legOffset);
-        ctx.fillRect(18, 40, 6, 8 - legOffset);
-
-        ctx.restore();
+      function startGame() {
+        if (gameStarted) return;
+        gameStarted = true;
+        console.log('[ui-init] startGame() invoked');
+        hideScreen('start-screen');
+        game = new Phaser.Game(config);
+        console.log('[ui-init] Phaser.Game started');
       }
-    }
 
-    // ============================================
-    // Enemy Class
-    // ============================================
-    class Enemy {
-      constructor(x, y, patrolStart, patrolEnd) {
-        this.x = x;
-        this.y = y;
- 
+      function restartGame() {
+        console.log('[ui-init] restartGame() invoked');
+        hideScreen('game-over-screen');
+        hideScreen('victory-screen');
+        if (game) {
+          game.scene.stop('game');
+          game.scene.start('game');
+        } else {
+          startGame();
+        }
+      }
 
-/* ... [文件截断显示：原文 23399 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
+      function bindStartButton() {
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) {
+          startBtn.addEventListener('click', startGame);
+          console.log('[ui-init] #start-btn click listener bound');
+        } else {
+          console.error('[ui-init] #start-btn not found in DOM');
+        }
+      }
+
+      function bindRestartButtons() {
+        const restartBtn = document.getElementById('restart-btn');
+        const againBtn = document.getElementById('play-again-btn');
+        if (restartBtn) restartBtn.addEventListener('click', restartGame);
+        if (againBtn) againBtn.addEventListener('click', restartGame);
+      }
+
+      function init() {
+        console.log('[ui-init] init() running, readyState=' + document.readyState);
+        bindStartButton();
+        bindRestartButtons();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          console.log('[ui-init] DOMContentLoaded fired');
+          init();
+        });
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

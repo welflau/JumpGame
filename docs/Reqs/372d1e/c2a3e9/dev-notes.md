@@ -1,11 +1,11 @@
 # 开发笔记 — [BUG] Start Game 按钮点击无响应 - 事件监听器未绑定
 
-> 2026-05-08 22:31 | LLM
+> 2026-11-02 18:07 | LLM
 
 ## 产出文件
-- [index.html](/app#repo?file=index.html) (23399 chars)
+- [index.html](/app#repo?file=index.html) (13327 chars)
 
-## 自测: 自测 6/6 通过 ✅
+## 自测: 自测 7/7 通过 ✅
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|
@@ -15,6 +15,7 @@
 | 语法检查 | ✅ | 通过 |
 | 文件名规范 | ✅ | 全英文 |
 | 磁盘落地 | ✅ | 1 个文件已落盘 |
+| 页面截图 | ✅ | 1 张截图 |
 
 ## 代码变更 (Diff)
 
@@ -22,99 +23,104 @@
 ```diff
 --- a/index.html
 +++ b/index.html
-@@ -557,6 +557,255 @@
-       constructor(x, y, patrolStart, patrolEnd) {
+@@ -78,6 +78,13 @@
+     .heart.empty {
 
-         this.x = x;
+       background: #555;
 
-         this.y = y;
+       opacity: 0.4;
 
-- 
++    }
+
++
+
++    #score-display {
+
++      color: #fff;
+
++      font-size: 18px;
+
++      font-weight: bold;
+
++      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+
+     }
+
+ 
+
+     #game-over-screen,
+
+@@ -93,470 +100,361 @@
+       flex-direction: column;
+
+       justify-content: center;
+
+       align-items: center;
+
++      gap: 24px;
+
++      pointer-events: auto;
+
++    }
+
++
+
++    .screen-title {
+
+       color: #fff;
+
+-      pointer-events: all;
+
+-      z-index: 20;
+
+-    }
 
 -
 
--/* ... [文件截断显示：原文 23266 字符，当前只显示前 15000；代码本身完整，保留未显示部分] ... */
-+        this.width = 32;
+-    #game-over-screen.hidden,
 
-+        this.height = 32;
+-    #victory-screen.hidden,
 
-+        this.vx = CONFIG.ENEMY_SPEED;
+-    #start-screen.hidden {
 
-+        this.vy = 0;
+-      display: none;
 
-+        this.patrolStart = patrolStart;
+-    }
 
-+        this.patrolEnd = patrolEnd;
+-
 
-+        this.onGround = false;
+-    h1 {
 
-+        this.animFrame = 0;
+-      font-size: 56px;
 
-+        this.animTimer = 0;
+-      margin-bottom: 20px;
 
-+      }
+-      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
 
-+
+-      animation: pulse 2s ease-in-out infinite;
 
-+      update(dt) {
+-    }
 
-+        // Patrol behavior
+-
 
-+        if (this.x <= this.patrolStart) {
+-    @keyframes pulse {
 
-+          this.vx = CONFIG.ENEMY_SPEED;
+-      0%, 100% { transform: scale(1); }
 
-+        } else if (this.x >= this.patrolEnd) {
+-      50% { transform: scale(1.05); }
 
-+          this.vx = -CONFIG.ENEMY_SPEED;
+-    }
 
-+        }
+-
 
-+
+-    .btn {
 
-+        // Apply physics
+-      padding: 14px 32px;
 
-+        gameState.physicsEngine.applyGravity(this, dt);
-
-+        gameState.physicsEngine.updatePosition(this, dt);
-
-+
-
-+        // Collision detection
-
-+        CollisionSystem.checkPlatformCollisions(this, gameState.platforms);
-
-+
-
-+        // Animation
-
-+        this.animTimer++;
-
-+        if (this.animTimer > 10) {
-
-+          this.animFrame = (this.animFrame + 1) % 2;
-
-+          this.animTimer = 0;
-
-+        }
-
-+      }
-
-+
-
-+      draw() {
-
-+        ctx.save();
-
-+        ctx.translate(this.x - gameState.cameraX, this.y);
-
-+
-
-+        // Body
-
-+        ctx.fillStyle = '#e74c3c';
-
-+        ctx.fillRect(0, 8, 32, 24);
-
-... (共 261 行变更)
+... (共 819 行变更)
 ```
+
+## 页面预览截图
+
+![开发自测 — [BUG] Start Game 按钮点击无响应 - 事件监](screenshots/dev_1793614052.png)
+
