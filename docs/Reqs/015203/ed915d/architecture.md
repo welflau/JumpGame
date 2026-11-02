@@ -5,29 +5,38 @@ bug_fix_recovery
 
 ## 技术栈
 
-- **frontend**: Vanilla JavaScript (ES6 Modules)
-- **rendering**: Canvas 2D API
-- **architecture**: Module-based (collision.js, physics.js, entity.js)
-- **styling**: Inline CSS in HTML
+- **game_engine**: Phaser 3.80.1 (Arcade Physics, Phaser.AUTO renderer)
+- **runtime**: HTML5 Canvas + inline ES2020 script in index.html (CDN 加载 phaser.min.js)
+- **language**: TypeScript 5.x 源码 (src/) + 内联 vanilla JS 运行时兜底
+- **build_tooling**: 无 (当前无 package.json / vite / tsconfig，TS 源码尚未接入构建管线)
+- **testing**: Playwright + 运行时验收钩子 (window.__game / window.__ACCEPTANCE__)
+- **scaling**: Phaser.Scale.FIT + CENTER_BOTH
+- **physics**: Arcade physics (gravity y=0, 平台跳跃由自定义参数驱动)
 
 ## 模块设计
 
-### 
-职责: 完整的游戏容器和初始化脚本
+### index.html
+职责: 
 
-### 
-职责: 碰撞检测系统（已完整）
+### src/main.ts
+职责: 
 
-### 
-职责: 物理引擎（已完整）
+### src/scenes/BootScene.ts
+职责: 
 
-### 
-职责: 实体基类和玩家类（已完整）
+### src/scenes/PreloadScene.ts / GameScene.ts / UIScene.ts
+职责: 
+
+### src/config/gameConfig.ts
+职责: 
+
+### src/state/PlayerState.ts, src/input/touchControls.ts, src/gameobjects/DashCooldownBar.ts, src/level/levelLayout.ts, src/utils/color.ts, src/config/difficulty.ts
+职责: 
 
 ## 关键决策
-- {'decision': '完全重写 index.html 而非修补', 'reason': '文件截断位置不明确，且丢失代码量大（约 50% 内容），修补风险高于重写。重写可确保结构完整性和代码一致性'}
-- {'decision': '保持现有模块化架构不变', 'reason': 'collision.js、physics.js、entity.js 已完整且功能正常，符合单一职责原则，无需重构'}
-- {'decision': "使用 ES6 模块导入（type='module'）", 'reason': '与现有 JS 文件的 export 语法一致，避免全局命名空间污染'}
-- {'decision': '所有游戏逻辑保留在 index.html 的 <script> 标签内', 'reason': '当前架构已将核心系统（物理、碰撞、实体）模块化，主循环和 UI 逻辑作为胶水代码放在 HTML 中符合小型游戏的简洁性原则'}
-- {'decision': '事件监听器在 DOMContentLoaded 后绑定', 'reason': '确保 DOM 元素已加载完成，避免 null reference 错误'}
-- {'decision': '使用 requestAnimationFrame 而非 setInterval', 'reason': '已有代码使用 RAF，保持一致；RAF 性能更优且自动适配屏幕刷新率'}
+- 以实际仓库状态为准，不按需求描述中的 vanilla JS 模块(collision.js/entity.js/game.js/physics.js)重构——这些文件在仓库中不存在
+- index.html 内联脚本是当前唯一可运行实现且未截断，保留为运行时基准，不整体重写
+- 增量修复定位为启动链路场景 key 不一致(BootScene 查 'GameScene' 而注册为 'Game')与事件绑定时机
+- 若需引入开始界面(Start Game 按钮)，采用 UI 场景覆盖层而非新建页面，避免推翻现有 Phaser 场景结构
+- 暂不引入 Vite/bundler，避免为单一 bug 修复扩大依赖面；TS 接线作为独立后续工作
+- 保留 window.__game / window.__ACCEPTANCE__ 测试钩子，作为 Playwright 回归验收依据
